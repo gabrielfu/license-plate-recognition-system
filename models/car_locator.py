@@ -67,13 +67,13 @@ class CarLocator():
 
         # Get detections
         with torch.no_grad():
-            img_detections = self.model(input_imgs)
-            img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
+            imgs_detections = self.model(input_imgs)
+            imgs_detections = non_max_suppression(imgs_detections, self.conf_thres, self.nms_thres)
 
-        for i, (detection, img_shape) in enumerate(zip(img_detections, imgs_shapes)):
+        for i, (detection, img_shape) in enumerate(zip(imgs_detections, imgs_shapes)):
             if detection is not None:
                 # Rescale boxes to original image
-                img_detections[i] = rescale_boxes(detection, self.img_size, img_shape).numpy()
+                imgs_detections[i] = rescale_boxes(detection, self.img_size, img_shape).numpy()
                 
         for i, img_detections in enumerate(imgs_detections):
             if img_detections is not None:
