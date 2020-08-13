@@ -62,7 +62,6 @@ def xywh2xyxy(inputs):
     outputs[..., 3] = inputs[..., 1] + inputs[..., 3] / 2
     return outputs
 
-
 def bbox_wh_iou(wh1, wh2):
     wh2 = wh2.t()
     w1, h1 = wh1[0], wh1[1]
@@ -71,10 +70,11 @@ def bbox_wh_iou(wh1, wh2):
     union_area = (w1 * h1 + 1e-16) + w2 * h2 - inter_area
     return inter_area / union_area
 
-# Maybe no need
-def bbox_iou(box1, box2, x1y1x2y2=True):
+def compute_ious(box1, box2, x1y1x2y2=True):
     """
-    Returns the IoU of two bounding boxes
+    Returns the IoU of two sets of bounding boxes
+    If box1 (1,7) & box2 (n,7), compare them one by one and return (n,7)
+    If box1 (n,7) & box2 (n,7), compare them correspondingly and return (n,7)
     """
     if not x1y1x2y2:
         # Transform from center and width to exact coordinates
@@ -104,6 +104,21 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
 
     return iou
 
+def compute_iou(bbox1, bbox2):
+    '''
+    bbox1: (x1, y1, x2, y2)\n
+    bbox2: (x1, y1, x2, y2)
+    '''
+    x11, y11, x12, y12 = bbox1[:4]
+    x21, y21, x22, y22 = bbox2[:4]
+
+    intersect = max(min(x12,x22)-max(x11,x21), 0) * max(min(y12,y22)-max(y11,y21), 0)
+    if intersect == 0:
+        return 0
+
+    area1 = (x12-x11) * (y12-y11)
+    area2 = (x22-x21) * (y22-y21)
+    return intersect / (area1+area2-intersect+1e-16)
 
 def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
     """
@@ -146,7 +161,7 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
             cls_detections = detections[detections[:,-1] == c]
             while len(cls_detections) > 0:
                 # Calculate IoU w.r.t. first item, and mark for removal if it's large
-                large_iou_scores = bbox_iou(cls_detections[0, :4].unsqueeze(0), cls_detections[:, :4]) >= nms_thres
+                large_iou_scores = compute_ious(cls_detections[0, :4].unsqueeze(0), cls_detections[:, :4]) >= nms_thres
                 to_remove = cls_detections[large_iou_scores]
                 # Merge the to-be-removed boxes weighted by their confidence
                 weights = to_remove[:,4:5]
@@ -168,50 +183,26 @@ def diff_cls_nms(img_detections, nms_thres=0.4, sort_by='conf'):
     Inputs:
     - img_detections: list of np arrays [array(x1, y1, x2, y2, conf, cls_conf, cls)]
     '''
-    # Sort in decending order by confidence first
-    def calculate_iou(box1, box2):
-        """
-        Returns the IoU of two bounding boxes
-        """
-        # Get the coordinates of bounding boxes
-        b1_x1, b1_y1, b1_x2, b1_y2 = box1[0], box1[1], box1[2], box1[3]
-        b2_x1, b2_y1, b2_x2, b2_y2 = box2[0], box2[1], box2[2], box2[3]
 
-        # get the corrdinates of the intersection rectangle
-        inter_rect_x1 = max(b1_x1, b2_x1)
-        inter_rect_y1 = max(b1_y1, b2_y1)
-        inter_rect_x2 = min(b1_x2, b2_x2)
-        inter_rect_y2 = min(b1_y2, b2_y2)
-        # Intersection area
-        inter_area = max(inter_rect_x2 - inter_rect_x1 + 1, 0) * max(inter_rect_y2 - inter_rect_y1 + 1, 0)
-        # Union Area
-        b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
-        b2_area = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1)
-
-        iou = inter_area / (b1_area + b2_area - inter_area + 1e-16)
-
-        return iou
-
-    def calculate_area(box):
+    def compute_area(box):
         x1, y1, x2, y2 = box[:4]
-        area = (x2-x1)*(y2-y1)
-
-        return area
+        return (x2-x1)*(y2-y1)
 
     if len(img_detections) == 0:
     	return img_detections
 
+    # Sort in decending order by confidence first
     if sort_by == 'conf':
         img_detections = sorted(img_detections, key=lambda x: x[4], reverse=True)
     elif sort_by == 'area':
-        img_detections = sorted(img_detections, key=lambda x: calculate_area(x), reverse=True)
+        img_detections = sorted(img_detections, key=lambda x: compute_area(x), reverse=True)
     
     valid_img_detections = []    
     while len(img_detections) > 0:
         to_keep_idx = []
         box1 = img_detections[0] # highest conf box
         for i, box2 in enumerate(img_detections):
-            iou = calculate_iou(box1, box2)
+            iou = compute_iou(box1, box2)
             if iou < nms_thres:
                 to_keep_idx.append(i)
         # remove boxes
