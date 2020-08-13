@@ -1,6 +1,10 @@
 # Mike
 test.ipynb
 
+# model weights
+models/data/*.weights
+models/data/*.pth
+
 # assets
 assets/
 
