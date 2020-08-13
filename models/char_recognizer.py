@@ -1,9 +1,9 @@
 import torch
 import cv2
 
-from modules.charnet import Charnet
-from utils.utils import to_tensor, get_correct_path
-from utils.preprocess import resize
+from .modules.charnet import Charnet
+from .utils.utils import to_tensor, get_correct_path
+from .utils.preprocess import resize
 
 class CharRecognizer():
     def __init__(self, cfg):

@@ -1,9 +1,9 @@
 import torch
 import cv2
 
-from modules.darknet import Darknet
-from utils.utils import to_tensor, load_classes, get_correct_path, non_max_suppression, rescale_boxes, diff_cls_nms
-from utils.preprocess import resize, pad_to_square, cv_resize, cv_preprocess
+from .modules.darknet import Darknet
+from .utils.utils import to_tensor, load_classes, get_correct_path, non_max_suppression, rescale_boxes, diff_cls_nms
+from .utils.preprocess import resize, pad_to_square, cv_resize, cv_preprocess
 
 class CarLocator():
     def __init__(self, cfg):
