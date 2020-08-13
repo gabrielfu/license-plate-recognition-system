@@ -2,9 +2,9 @@
 # n_cpu: number of cpu workers, 0 means main thread
 
 car_locator:
-  model_cfg: models/model_data/yolov3.cfg
-  weights_path: models/model_data/yolov3.weights
-  class_path: models/model_data/coco.names
+  model_cfg: models/data/yolov3.cfg
+  weights_path: models/data/yolov3.weights
+  class_path: models/data/coco.names
   conf_thres: 0.5
   nms_thres: 0.4
   # batch_size: 8
@@ -14,7 +14,7 @@ car_locator:
 
 car_locator_trt:
   model_name: yolov4-416
-  class_path: models/model_data/coco.names
+  class_path: models/data/coco.names
   n_classes: 80
   conf_thres: 0.5
   nms_thres: 0.4
@@ -32,9 +32,9 @@ plate_detector:
   pred_mode: cv2
 
 segmentator:
-  model_cfg: models/model_data/yolov3_char_seg_191219.cfg
-  weights_path: models/model_data/char_seg_191219.weights
-  class_path: models/model_data/segmentator_classes.names
+  model_cfg: models/data/yolov3_char_seg_191219.cfg
+  weights_path: models/data/char_seg_191219.weights
+  class_path: models/data/segmentator_classes.names
   conf_thres: 0.5
   nms_thres: 0.4
   # batch_size: 8
@@ -44,7 +44,7 @@ segmentator:
   pred_mode: cv2
 
 char_recognizer:
-  weights_path: models/model_data/char_recog_9687.pth
+  weights_path: models/data/char_recog_9687.pth
   inverse_char_dict_path: models.data.char_dict
   inverse_char_dict: inverse_char_dict
   # 'conf_thres: 0.5
