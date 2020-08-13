@@ -33,8 +33,8 @@ class Camera:
         self.cap = cv2.VideoCapture(self.cam_ip)
         self.new_frame = None
         self.accum_frames = queue.Queue(maxsize=self.num_votes)
-        self.is_started = False
-        self.is_accumulating = False
+        self._is_started = False
+        self._is_accumulating = False
         self.is_accum_starting = False
         self.is_accum_finished = False
 
@@ -46,31 +46,31 @@ class Camera:
         self.cap.set(propId, value)
 
     def start(self):
-        if self.is_started:
+        if self._is_started:
             print('{} had already been started'.format(self.cam_ip))
             return None
 
-        self.is_started = True
+        self._is_started = True
         self.thread = threading.Thread(target=self.updating, args=())
         self.thread.start()
 
     def updating(self):
-        while self.is_started:
+        while self._is_started:
             succ, frame = self.cap.read()
             if not succ:
                 self.new_frame = None
                 self.reconnecting()
                 continue
             self.new_frame = frame
-            if self.is_accum_starting or self.is_accumulating:
+            if self.is_accum_starting or self._is_accumulating:
                 if self.is_accum_starting:
                     self.clear_accum_frames()
                     self.is_accum_starting = False
-                    self.is_accumulating = True
+                    self._is_accumulating = True
                 self.accumulate(frame)
                 if self.accum_frames.full():
                     self.is_accum_finished = True
-                    self.is_accumulating = False
+                    self._is_accumulating = False
 
     def accumulate(self, frame):
         try:
@@ -81,7 +81,7 @@ class Camera:
     def reconnecting(self):
         # try to reconnect untill succ
         print('{} cannot read frame, trying to reconnect...'.format(self.cam_ip))
-        while self.is_started:
+        while self._is_started:
             self.cap = cv2.VideoCapture(self.cam_ip)
             time.sleep(5)
             succ, _ = self.cap.read()
@@ -92,7 +92,7 @@ class Camera:
                 continue
 
     def stop(self):
-        self.is_started = False
+        self._is_started = False
         self.cap.release()
         self.thread.join()
 
