@@ -2,8 +2,8 @@ import torch
 import cv2
 
 from .modules.darknet import Darknet
-from .utils.utils import to_tensor, load_classes, get_correct_path, non_max_suppression, rescale_boxes, diff_cls_nms
-from .utils.preprocess import resize, pad_to_square, cv_resize, cv_preprocess
+from .utils.utils import load_classes, get_correct_path
+from .utils.preprocess import resize
 
 class Segmentator():
     def __init__(self, cfg):
