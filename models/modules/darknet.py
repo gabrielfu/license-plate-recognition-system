@@ -173,7 +173,10 @@ class YoloLayer(nn.Module):
         return output
 
 class Darknet(nn.Module):
-    """YOLOv3 object detection model"""
+    """
+    YOLOv3 object detection model
+    Takes in RGB images
+    """
 
     def __init__(self, config_path, img_size=416):
         super().__init__()

@@ -46,6 +46,7 @@ class Charnet(nn.Module):
     def __init__(self, input_size, out_dim):
         '''
         input_size: (C,H,W)
+        Takes in RGB image
         '''
         super().__init__()
         self.input_size = input_size
