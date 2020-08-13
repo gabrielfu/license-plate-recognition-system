@@ -58,6 +58,7 @@ class CarLocator():
         Support arbitrary Batchsize prediction, be careful of device memory usage
         output: (x1, y1, x2, y2, conf, cls_conf, cls_pred) for each tensor in a list
         '''
+        ### Yolo prediction
         # Configure input
         if not imgs_list: # Empty imgs list
             return []
@@ -74,7 +75,8 @@ class CarLocator():
             if detection is not None:
                 # Rescale boxes to original image
                 imgs_detections[i] = rescale_boxes(detection, self.img_size, img_shape).numpy()
-                
+
+        ### Post processing       
         for i, img_detections in enumerate(imgs_detections):
             if img_detections is not None:
                 img_detections = [detection for detection in img_detections if int(detection[-1]) in self.idx2targetcls]

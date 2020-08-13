@@ -1,6 +1,6 @@
 import numpy as np
 
-from .modules.yolov3_trt import YOLOv3_trt
+from .modules.yolo_trt import YOLO_trt
 from .utils.utils import load_classes, get_correct_path, diff_cls_nms
 
 class CarLocatorTRT():
@@ -9,7 +9,7 @@ class CarLocatorTRT():
         self.model_name = cfg['model_name']
         self.conf_thres = cfg['conf_thres']
         self.n_classes = cfg['n_classes']
-        self.model = YOLOv3_trt(self.model_name, self.input_size, self.n_classes)
+        self.model = YOLO_trt(self.model_name, self.input_size, self.n_classes)
         self.classes = load_classes(get_correct_path(cfg['class_path']))
 
         self.target_classes = ['car', 'bus', 'truck']

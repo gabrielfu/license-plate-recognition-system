@@ -52,6 +52,7 @@ class PlateDetector():
         Support arbitrary Batchsize prediction, be careful of device memory usage
         output: (x1, y1, x2, y2, conf, cls_conf, cls_pred) for each tensor in a list
         '''
+        ### Yolo prediction
         # Configure input
         if not imgs_list: # Empty imgs list
             return []

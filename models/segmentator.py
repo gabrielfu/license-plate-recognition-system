@@ -41,7 +41,30 @@ class Segmentator():
         return boxes_list
 
     def get_rois(self, plates_list):
-        img_detections = super().predict(plates_list)
+        '''
+        *** Can be empty imgs_list but cannot be a list with any None inside ***
+        Support arbitrary Batchsize prediction, be careful of device memory usage
+        output: (x1, y1, x2, y2, conf, cls_conf, cls_pred) for each tensor in a list
+        '''
+        ### Yolo prediction
+        # Configure input
+        if not imgs_list: # Empty imgs list
+            return []
+
+        input_imgs, imgs_shapes = self.prepare_raw_imgs(imgs_list, self.pred_mode)
+        input_imgs = input_imgs.to(self.device)
+
+        # Get detections
+        with torch.no_grad():
+            img_detections = self.model(input_imgs)
+            img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
+
+        for i, (detection, img_shape) in enumerate(zip(img_detections, imgs_shapes)):
+            if detection is not None:
+                # Rescale boxes to original image
+                img_detections[i] = rescale_boxes(detection, self.img_size, img_shape).numpy()
+        
+        ### Post processing
         boxes_list = [box.astype('int')[:, :4] if box is not None else box for box in img_detections]
         for i, boxes in enumerate(boxes_list): # 3D array of each char coords in each imgs
             if boxes is None:

@@ -387,8 +387,8 @@ def do_inference_v2(context, bindings, inputs, outputs, stream):
     return [out.host for out in outputs]
 
 
-class YOLOv3_trt(object):
-    """TrtYOLO class encapsulates things needed to run TRT YOLO."""
+class YOLO_trt(object):
+    """TrtYOLO class encapsulates things needed to run TRT YOLOv3 or YOLOv4"""
 
     def _load_engine(self):
         TRTbin = './model_data/%s.trt' % self.model
