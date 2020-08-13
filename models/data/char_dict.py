@@ -1,4 +1,4 @@
-char_dic = {
+char_dict = {
 	'A': 0,
 	'B': 1,
 	'C': 2,
@@ -34,7 +34,7 @@ char_dic = {
 	'0': 32,
 },
 
-inverse_char_dic = {
+inverse_char_dict = {
 	0: 'A',
 	1: 'B',
 	2: 'C',

@@ -10,9 +10,10 @@ class CharRecognizer():
         weights_path = get_correct_path(cfg['weights_path'])
         self.img_size = cfg['img_size']
         # self.conf_thres = cfg['conf_thres']
-        self.inverse_char_dic = cfg['inverse_char_dic']
+        exec(f"from {cfg['inverse_char_dict_path']} import {cfg['inverse_char_dict']}")
+        self.inverse_char_dict = inverse_char_dict
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = Charnet((3, self.img_size, self.img_size), len(self.inverse_char_dic))
+        self.model = Charnet((3, self.img_size, self.img_size), len(self.inverse_char_dict))
         self.model.load_state_dict(torch.load(weights_path, map_location=self.device))
         self.model.eval()
 
@@ -41,7 +42,7 @@ class CharRecognizer():
                 # if out_probs[i][idx].numpy() < self.conf_thres:
                 #     output_str += '_'
                 # else:
-                #     output_str += self.inverse_char_dic[idx]
-                output_str += self.inverse_char_dic[idx]
+                #     output_str += self.inverse_char_dict[idx]
+                output_str += self.inverse_char_dict[idx]
 
         return output_str, min_char_probs
