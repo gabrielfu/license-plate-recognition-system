@@ -2,6 +2,10 @@
 test.ipynb
 test.py
 
+# model weights
+models/data/*.weights
+models/data/*.pth
+
 # assets
 assets/
 

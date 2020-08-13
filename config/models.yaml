@@ -1,0 +1,51 @@
+# weights_path: can be .weights (openCV) or .pth (Pytorch)
+# n_cpu: number of cpu workers, 0 means main thread
+
+car_locator:
+  model_cfg: models/data/yolov3.cfg
+  weights_path: models/data/yolov3.weights
+  class_path: models/data/coco.names
+  conf_thres: 0.5
+  nms_thres: 0.4
+  # batch_size: 8
+  n_cpu: 0
+  img_size: 416
+  pred_mode: torch
+
+car_locator_trt:
+  model_name: yolov4-416
+  class_path: models/data/coco.names
+  n_classes: 80
+  conf_thres: 0.5
+  nms_thres: 0.4
+  input_size: !!python/tuple [416, 416]
+
+plate_detector:
+  model_cfg: models/data/yolov3_plate_191204.cfg
+  weights_path: models/data/plate_191204.weights
+  class_path: models/data/detector_classes.names
+  conf_thres: 0.5
+  nms_thres: 0.4
+  # batch_size: 8
+  n_cpu: 0
+  img_size: 416
+  pred_mode: cv2
+
+segmentator:
+  model_cfg: models/data/yolov3_char_seg_191219.cfg
+  weights_path: models/data/char_seg_191219.weights
+  class_path: models/data/segmentator_classes.names
+  conf_thres: 0.5
+  nms_thres: 0.4
+  # batch_size: 8
+  n_cpu: 0
+  img_size: 416
+  char_line_threshold: 0.5
+  pred_mode: cv2
+
+char_recognizer:
+  weights_path: models/data/char_recog_9687.pth
+  inverse_char_dict_path: models.data.char_dict
+  inverse_char_dict: inverse_char_dict
+  # 'conf_thres: 0.5
+  img_size: 16
