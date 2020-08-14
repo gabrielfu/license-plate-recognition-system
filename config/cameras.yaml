@@ -1,7 +1,5 @@
 properties:
   num_votes: 8
-  max_stored_results: 8
-  max_stored_cars: 4
 
 cameras:
   ############ top ############
