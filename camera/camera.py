@@ -51,14 +51,14 @@ class Camera:
                 self.new_frame = None
                 self.reconnecting()
                 continue
-            self.update_new_frame(frame)
-            self.accumulate(frame)
+            self._update_new_frame(frame)
+            self._accumulate(frame)
 
-    def update_new_frame(self, frame):
+    def _update_new_frame(self, frame):
         with self.lock:
             self.new_frame = frame
 
-    def accumulate(self, frame):
+    def _accumulate(self, frame):
         if self._accum_flag:
             try:
                 self.accum_frames.put_nowait(frame)
