@@ -22,9 +22,14 @@ class LPR():
                     [
                         # each plate in the frame
                         {
-                            'plate_num': ...,
-                            'confidence': ...,
-                            'plate_coords': [x1, y1, x2, y2],
+                            'plate': {
+                                'coords': [x1, y1, x2, y2],
+                                'confidence': ...
+                            },
+                            'plate_num': {
+                                'numbers': ...,
+                                'confidence': ...
+                            },
                             'status': '...'
                         }
                     ]
