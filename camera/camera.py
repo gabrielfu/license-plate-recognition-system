@@ -77,7 +77,7 @@ class Camera:
         if self._is_accumulating:
             try:
                 self.accum_frames.put_nowait(frame)
-            except Full:
+            except queue.Full:
                 print('UNEXPECTED: try to put frame when accum_frames is full: {}'.format(self.cam_ip))
 
             if self.accum_frames.full():
@@ -113,7 +113,7 @@ class Camera:
             while not self.accum_frames.empty():
                 try:
                     accum_frames.append(self.accum_frames.get_nowait())
-                except Empty:
+                except queue.Empty:
                     print('UNEXPECTED: try to get frame when accum_frames is empty: {}'.format(self.cam_ip))
             accum_frames = np.array(accum_frames)
         return accum_frames
