@@ -1,24 +1,11 @@
 properties:
   num_votes: 8
 
+# trigger_zone is a list of tuple
 cameras:
-  ############ top ############
-  # [camera1]
-  # type := top
-  # ip := ip1
-  # bot_cam_name := camera2
-  # bot_cam_dot := 25, 25
-
-  ############ bot ############
-  # [camera2]
-  # type := bot
-  # ip := ip2
-
-  ############ entrance ############
-  camera3:
+  camera1:
     type: 'entrance'
     ip: './assets/entrance_1.mp4'
-    # trigger_zone is a list of tuple
     trigger_zone:
       - !!python/tuple [531, 983]
       - !!python/tuple [1050, 700]

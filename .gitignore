@@ -2,6 +2,9 @@
 test.ipynb
 test.py
 
+# Gab
+nms.ipynb
+
 # model weights
 models/data/*.weights
 models/data/*.pth
@@ -18,6 +21,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+.vscode/
 .Python
 build/
 develop-eggs/
