@@ -3,6 +3,7 @@ import cv2
 import queue
 from enum import Enum
 import time
+import numpy as np
 
 
 class CameraType(Enum):
