@@ -17,23 +17,23 @@ class LPR():
         Inputs
             frames: list of frames (np.array or tensors)
         Outputs
-            res: [
-                    # each frame (empty list if no plate in the frame)
-                    [
-                        # each plate in the frame
-                        {
-                            'plate': {
-                                'coords': [x1, y1, x2, y2],
-                                'confidence': ...
-                            },
-                            'plate_num': {
-                                'numbers': ...,
-                                'confidence': ...
-                            },
-                            'status': '...'
-                        }
+            output: [
+                        # each frame (empty list if no plate in the frame)
+                        [
+                            # each plate in the frame
+                            {
+                                'plate': {
+                                    'coords': (x1, y1, x2, y2),
+                                    'confidence': 0.99
+                                },
+                                'plate_num': {
+                                    'numbers': 'AB1234',
+                                    'confidence': 0.99
+                                },
+                                'status': 'success'
+                            }
+                        ]
                     ]
-                 ]
         '''
 
         # Batch detect plates
@@ -56,13 +56,13 @@ class LPR():
                     y2 = int(min(y2+pad_h,h))
                     x1 = int(max(x1-pad_w,0))
                     x2 = int(min(x2+pad_w,w))
-                    plates.append([x1,y1,x2,y2, conf])
+                    plates.append((x1,y1,x2,y2, conf))
             batch_plates.append(plates)
             batch_plates_imgs.extend(frame[y1:y2, x1:x2] for x1,y1,x2,y2,_ in plates)
 
         # record number of plates in each frame
         # so that we can map the predicted plate number to its corresponding frame
-        batch_plates_len = [len(sl) for sl in batch_plates]
+        batch_plates_len = tuple(len(sl) for sl in batch_plates)
 
         # batch predict segmentation 
         batch_preds = self.segmentator.predict(batch_plates_imgs)

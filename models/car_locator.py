@@ -36,29 +36,57 @@ class CarLocator():
         '''
         *** Can be empty imgs_list but cannot be a list with any None inside ***
         Support arbitrary Batchsize prediction, be careful of device memory usage
-        output: (x1, y1, x2, y2, conf, cls_conf, cls_pred) for each tensor in a list
+
+        output:
+            [   
+                # For each frame
+                [
+                    # For each detected car
+                    {
+                        'coords': (x1,y1,x2,y2),
+                        'confidence': 0.99
+                    }
+                ]
+            ]
         '''
-        ### Yolo prediction
-        # Configure input
         if not imgs_list: # Empty imgs list
             return []
 
+        # Prepare input
         input_imgs, imgs_shapes = prepare_raw_imgs(imgs_list, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)
 
-        # Get detections
+        # Yolo prediction
         with torch.no_grad():
             imgs_detections = self.model(input_imgs)
             imgs_detections = non_max_suppression(imgs_detections, self.conf_thres, self.nms_thres)
 
-        for i, (detection, img_shape) in enumerate(zip(imgs_detections, imgs_shapes)): # for each image
-            if detection is not None:
+        # if no car in the frame, output empty list
+        output = [[] for _ in range(len(imgs_detections))]
+
+        for i, (img_detection, img_shape) in enumerate(zip(imgs_detections, imgs_shapes)): # for each image
+            if img_detection is not None:
                 # Rescale boxes to original image
-                detection = rescale_boxes(detection, self.img_size, img_shape).numpy()
+                img_detection = rescale_boxes(img_detection, self.img_size, img_shape).numpy()
 
                 # Filter out wanted classes and perform diff class NMS      
-                detection = [det for det in detection if int(det[-1]) in self.idx2targetcls]
-                detection = diff_cls_nms(detection, self.nms_thres, sort_by=sort_by)
-                imgs_detections[i] = detection
+                img_detection = [det for det in img_detection if int(det[-1]) in self.idx2targetcls]
+                img_detection = diff_cls_nms(img_detection, self.nms_thres, sort_by=sort_by)
 
-        return imgs_detections
+                '''
+                img_detection:
+                [
+                    np.array([x1,y1,x2,y2,conf,cls_conf,cls]),
+                    ...
+                ]
+
+                now make dict for output
+                '''
+                img_detection = [{
+                    'coords': tuple(det[:4]),
+                    'confidence': det[4]    
+                } for det in img_detection]
+
+                output[i] = img_detection
+
+        return output
