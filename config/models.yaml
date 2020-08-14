@@ -20,6 +20,10 @@ car_locator_trt:
   nms_thres: 0.4
   input_size: !!python/tuple [416, 416]
 
+lpr:
+  pad_x: 0.08
+  pad_y: 0.07
+
 plate_detector:
   model_cfg: models/data/yolov3_plate_191204.cfg
   weights_path: models/data/plate_191204.weights
@@ -45,7 +49,8 @@ segmentator:
 
 char_recognizer:
   weights_path: models/data/char_recog_9687.pth
-  inverse_char_dict_path: models.data.char_dict
-  inverse_char_dict: inverse_char_dict
+  # inverse_char_dict_path: models.data.char_dict
+  # inverse_char_dict: inverse_char_dict
+  inverse_char_dict: models/data/char_dict.yaml
   # 'conf_thres: 0.5
   img_size: 16

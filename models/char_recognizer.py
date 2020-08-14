@@ -1,17 +1,18 @@
 import torch
 import cv2
+import yaml
 
 from .modules.charnet import Charnet
 from .utils.utils import to_tensor, get_correct_path
-from .utils.preprocess import resize
 
 class CharRecognizer():
     def __init__(self, cfg):
         weights_path = get_correct_path(cfg['weights_path'])
         self.img_size = cfg['img_size']
         # self.conf_thres = cfg['conf_thres']
-        exec(f"from {cfg['inverse_char_dict_path']} import {cfg['inverse_char_dict']}")
-        self.inverse_char_dict = inverse_char_dict
+        # exec(f"from {cfg['inverse_char_dict_path']} import {cfg['inverse_char_dict']}")
+        # print(f"from {cfg['inverse_char_dict_path']} import {cfg['inverse_char_dict']}")
+        self.inverse_char_dict = yaml.load(open(cfg['inverse_char_dict'], 'r'), Loader=yaml.FullLoader)['inverse_char_dict']
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = Charnet((3, self.img_size, self.img_size), len(self.inverse_char_dict))
         self.model.load_state_dict(torch.load(weights_path, map_location=self.device))
@@ -36,7 +37,7 @@ class CharRecognizer():
             out_probs = torch.nn.Softmax(dim=1)(outs)
             out_idxs = [out.argmax().item() for out in out_probs]
             char_probs = [out.max().item() for out in out_probs]
-#             avg_char_probs = sum(char_probs)/len(char_probs)
+            # avg_char_probs = sum(char_probs)/len(char_probs)
             min_char_probs = min(char_probs)
             for _, idx in enumerate(out_idxs):
                 # if out_probs[i][idx].numpy() < self.conf_thres:
