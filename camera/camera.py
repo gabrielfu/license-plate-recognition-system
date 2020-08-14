@@ -64,8 +64,10 @@ class Camera:
                 self.new_frame = None
                 self.reconnecting()
                 continue
-            self._update_new_frame(frame)
-            self._accumulate(frame)
+            if self.cam_type == CameraType.bot or self.cam_type == CameraType.entrance:
+                self._update_new_frame(frame)
+            if self.cam_type == CameraType.top or self.cam_type == CameraType.entrance:
+                self._accumulate(frame)
 
     def _update_new_frame(self, frame):
         """Update self.new_frame with lock"""
