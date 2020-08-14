@@ -2,8 +2,7 @@ import torch
 import cv2
 
 from .modules.darknet import Darknet
-from .utils.utils import to_tensor, load_classes, get_correct_path, non_max_suppression, rescale_boxes
-from .utils.preprocess import resize, pad_to_square, cv_resize, cv_preprocess
+from .utils.utils import to_tensor, prepare_raw_imgs, load_classes, get_correct_path, non_max_suppression, rescale_boxes
 
 class PlateDetector():
     def __init__(self, cfg):
@@ -26,25 +25,6 @@ class PlateDetector():
             # Load checkpoint weights
             self.model.load_state_dict(torch.load(weights_path, map_location=self.device))
         self.model.eval()  # Set in evaluation mode
-        
-    def prepare_raw_imgs(self, imgs_list, mode):
-        '''
-        imgs_list: list of imgs (each img is a BGR np array read from openCV)
-        '''
-        imgs_list = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in imgs_list]
-            
-        if mode == 'torch':
-            # Torch model preprocess pipeline
-            imgs = [to_tensor(img) for img in imgs_list]
-            imgs_shapes = [(img.shape[1],img.shape[2]) for img in imgs]
-            imgs = [resize(pad_to_square(img, pad_value=128/255)[0],self.img_size) for img in imgs]
-        elif mode == 'cv2':
-            # OpenCV model preprocess pipeline
-            imgs_shapes = [(img.shape[0],img.shape[1]) for img in imgs_list]
-            imgs = [cv_resize(cv_preprocess(img)[0],(self.img_size, self.img_size)) for img in imgs_list]
-            imgs = [to_tensor(img) for img in imgs]
-
-        return torch.stack(imgs), imgs_shapes
     
     def predict(self, imgs_list):
         '''
@@ -57,7 +37,7 @@ class PlateDetector():
         if not imgs_list: # Empty imgs list
             return []
 
-        input_imgs, imgs_shapes = self.prepare_raw_imgs(imgs_list, self.pred_mode)
+        input_imgs, imgs_shapes = prepare_raw_imgs(imgs_list, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)
 
         # Get detections

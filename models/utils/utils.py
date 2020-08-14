@@ -1,9 +1,12 @@
+import cv2
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import sys
 import os
+
+from .preprocess import resize, pad_to_square, cv_resize, cv_preprocess
 
 def get_correct_path(relative_path):
     try:
@@ -35,6 +38,26 @@ def load_classes(path):
     fp = open(path, "r")
     names = fp.read().split("\n")[:-1]
     return names
+
+
+def prepare_raw_imgs(imgs_list, mode, img_size):
+    '''
+    imgs_list: list of imgs (each img is a BGR np array read from openCV)
+    '''
+    imgs_list = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in imgs_list]
+        
+    if mode == 'torch':
+        # Torch model preprocess pipeline
+        imgs = [to_tensor(img) for img in imgs_list]
+        imgs_shapes = [(img.shape[1],img.shape[2]) for img in imgs]
+        imgs = [resize(pad_to_square(img, pad_value=128/255)[0],img_size) for img in imgs]
+    elif mode == 'cv2':
+        # OpenCV model preprocess pipeline
+        imgs_shapes = [(img.shape[0],img.shape[1]) for img in imgs_list]
+        imgs = [cv_resize(cv_preprocess(img)[0],(img_size, img_size)) for img in imgs_list]
+        imgs = [to_tensor(img) for img in imgs]
+
+    return torch.stack(imgs), imgs_shapes
 
 
 def rescale_boxes(boxes, current_dim, original_shape):
@@ -120,6 +143,10 @@ def compute_iou(bbox1, bbox2):
     area2 = (x22-x21) * (y22-y21)
     return intersect / (area1+area2-intersect+1e-16)
 
+def compute_area(box):
+    x1, y1, x2, y2 = box[:4]
+    return (x2-x1)*(y2-y1)
+
 def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
     """
     Removes detections with lower object confidence score than 'conf_thres' and performs
@@ -176,17 +203,29 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
 
     return output
 
+# def diff_cls_nms_filter_conf(imgs_detections, conf_thres=0.5, nms_thres=0.4, sort_by='conf', xywh=True):
+#     '''
+#     Different class NMS for multiple image predictions
+#     Args:
+#         prediction: tensor (num_imgs, num_anchors, num_classes+5)
+#         conf_thres: discard all predictions with confidence below this value
+#         nms_thres: discard all predictions with IoU above this value
+#         sort_by: sort filtered predictions by confidence or area
+#     Returns detections with shape:
+#         (x1, y1, x2, y2, object_conf, class_score, class_pred)
+#     '''
+#     # From (center x, center y, width, height) to (x1, y1, x2, y2)
+#     if xywh:
+#         prediction[...,:4] = xywh2xyxy(prediction[...,:4])
+####
+#### Not implementing because of unknown effects from merging all bboxes of different classes    
 
-# Our codes
 def diff_cls_nms(img_detections, nms_thres=0.4, sort_by='conf'):
     '''
+    Different class NMS for one image prediction
     Inputs:
     - img_detections: list of np arrays [array(x1, y1, x2, y2, conf, cls_conf, cls)]
     '''
-
-    def compute_area(box):
-        x1, y1, x2, y2 = box[:4]
-        return (x2-x1)*(y2-y1)
 
     if len(img_detections) == 0:
     	return img_detections

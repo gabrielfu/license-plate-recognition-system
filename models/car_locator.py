@@ -2,8 +2,7 @@ import torch
 import cv2
 
 from .modules.darknet import Darknet
-from .utils.utils import to_tensor, load_classes, get_correct_path, non_max_suppression, rescale_boxes, diff_cls_nms
-from .utils.preprocess import resize, pad_to_square, cv_resize, cv_preprocess
+from .utils.utils import to_tensor, prepare_raw_imgs, load_classes, get_correct_path, non_max_suppression, rescale_boxes, diff_cls_nms
 
 class CarLocator():
     def __init__(self, cfg):
@@ -32,25 +31,6 @@ class CarLocator():
         # Define car detection classes
         self.target_classes = ['car', 'bus', 'truck']
         self.idx2targetcls = {idx:cls_name for idx, cls_name in enumerate(self.classes) if cls_name in self.target_classes}
-        
-    def prepare_raw_imgs(self, imgs_list, mode):
-        '''
-        imgs_list: list of imgs (each img is a BGR np array read from openCV)
-        '''
-        imgs_list = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in imgs_list]
-
-        if mode == 'torch':
-            # Torch model preprocess pipeline
-            imgs = [to_tensor(img) for img in imgs_list]
-            imgs_shapes = [(img.shape[1],img.shape[2]) for img in imgs]
-            imgs = [resize(pad_to_square(img, pad_value=128/255)[0],self.img_size) for img in imgs]
-        elif mode == 'cv2':
-            # OpenCV model preprocess pipeline
-            imgs_shapes = [(img.shape[0],img.shape[1]) for img in imgs_list]
-            imgs = [cv_resize(cv_preprocess(img)[0],(self.img_size, self.img_size)) for img in imgs_list]
-            imgs = [to_tensor(img) for img in imgs]
-
-        return torch.stack(imgs), imgs_shapes
     
     def predict(self, imgs_list, sort_by='conf'):
         '''
@@ -63,7 +43,7 @@ class CarLocator():
         if not imgs_list: # Empty imgs list
             return []
 
-        input_imgs, imgs_shapes = self.prepare_raw_imgs(imgs_list, self.pred_mode)
+        input_imgs, imgs_shapes = prepare_raw_imgs(imgs_list, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)
 
         # Get detections
@@ -71,16 +51,14 @@ class CarLocator():
             imgs_detections = self.model(input_imgs)
             imgs_detections = non_max_suppression(imgs_detections, self.conf_thres, self.nms_thres)
 
-        for i, (detection, img_shape) in enumerate(zip(imgs_detections, imgs_shapes)):
+        for i, (detection, img_shape) in enumerate(zip(imgs_detections, imgs_shapes)): # for each image
             if detection is not None:
                 # Rescale boxes to original image
-                imgs_detections[i] = rescale_boxes(detection, self.img_size, img_shape).numpy()
+                detection = rescale_boxes(detection, self.img_size, img_shape).numpy()
 
-        ### Post processing       
-        for i, img_detections in enumerate(imgs_detections):
-            if img_detections is not None:
-                img_detections = [detection for detection in img_detections if int(detection[-1]) in self.idx2targetcls]
-                img_detections = diff_cls_nms(img_detections, self.nms_thres, sort_by=sort_by)
-                imgs_detections[i] = img_detections
+                # Filter out wanted classes and perform diff class NMS      
+                detection = [det for det in detection if int(det[-1]) in self.idx2targetcls]
+                detection = diff_cls_nms(detection, self.nms_thres, sort_by=sort_by)
+                imgs_detections[i] = detection
 
         return imgs_detections

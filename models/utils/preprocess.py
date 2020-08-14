@@ -19,13 +19,11 @@ def pad_to_square(img, pad_value):
 
     return img, pad
 
-
 # Our codes
 def cv_resize(img, shape):
     # May change interpolation to nearest neighbour later, because darknet-53 uses that in training
     img = cv2.resize(img,(shape[0], shape[1]), interpolation = cv2.INTER_CUBIC)
     return img
-
 
 # Our codes
 def cv_preprocess(img):

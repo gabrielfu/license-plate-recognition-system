@@ -2,8 +2,7 @@ import torch
 import cv2
 
 from .modules.darknet import Darknet
-from .utils.utils import load_classes, get_correct_path
-from .utils.preprocess import resize
+from .utils.utils import prepare_raw_imgs, load_classes, get_correct_path, non_max_suppression, rescale_boxes
 
 class Segmentator():
     def __init__(self, cfg):
@@ -40,7 +39,7 @@ class Segmentator():
             boxes_list[i] = self.sort_boxes_single(boxes, boxes_centres)
         return boxes_list
 
-    def get_rois(self, plates_list):
+    def get_rois(self, imgs_list):
         '''
         *** Can be empty imgs_list but cannot be a list with any None inside ***
         Support arbitrary Batchsize prediction, be careful of device memory usage
@@ -51,7 +50,7 @@ class Segmentator():
         if not imgs_list: # Empty imgs list
             return []
 
-        input_imgs, imgs_shapes = self.prepare_raw_imgs(imgs_list, self.pred_mode)
+        input_imgs, imgs_shapes = prepare_raw_imgs(imgs_list, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)
 
         # Get detections
@@ -82,10 +81,10 @@ class Segmentator():
                 ymax = max(0,ymax)
                 xmin = max(0,xmin)
                 xmax = max(0,xmax)
-                ymin = min(plates_list[i].shape[0],ymin)
-                ymax = min(plates_list[i].shape[0],ymax)
-                xmin = min(plates_list[i].shape[1],xmin)
-                xmax = min(plates_list[i].shape[1],xmax)
+                ymin = min(imgs_list[i].shape[0],ymin)
+                ymax = min(imgs_list[i].shape[0],ymax)
+                xmin = min(imgs_list[i].shape[1],xmin)
+                xmax = min(imgs_list[i].shape[1],xmax)
 
                 boxes[j] = (xmin, ymin, xmax, ymax)
 
