@@ -82,7 +82,7 @@ class LPR():
                 status = 'no characters segmented'
             
             # Retrieve all information for output
-            img_idx, plate_idx = find_img_by_plate_idx(i, batch_plates_len)
+            img_idx, plate_idx = self.find_frame_by_plate_idx(i, batch_plates_len)
             plate_coords = batch_plates[img_idx][plate_idx]
 
             output[img_idx].append({
