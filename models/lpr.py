@@ -43,17 +43,17 @@ class LPR():
                 h, w = frame.shape[:2]
                 # For each plate in the frame
                 for pred in preds:
-                    x1,y1,x2,y2,_,_,_ = pred.astype('int')
+                    x1,y1,x2,y2,conf,_,_ = pred
                     # Pad extra space to detected plate img
                     pad_w = int((x2-x1)*self.pad_x)
                     pad_h = int((y2-y1)*self.pad_y)
-                    y1 = max(y1-pad_h,0)
-                    y2 = min(y2+pad_h,h)
-                    x1 = max(x1-pad_w,0)
-                    x2 = min(x2+pad_w,w)
-                    plates.append([x1,y1,x2,y2])
+                    y1 = int(max(y1-pad_h,0))
+                    y2 = int(min(y2+pad_h,h))
+                    x1 = int(max(x1-pad_w,0))
+                    x2 = int(min(x2+pad_w,w))
+                    plates.append([x1,y1,x2,y2, conf])
             batch_plates.append(plates)
-            batch_plates_imgs.extend(frame[y1:y2, x1:x2] for x1,y1,x2,y2 in plates)
+            batch_plates_imgs.extend(frame[y1:y2, x1:x2] for x1,y1,x2,y2,_ in plates)
 
         # record number of plates in each frame
         # so that we can map the predicted plate number to its corresponding frame
@@ -83,12 +83,17 @@ class LPR():
             
             # Retrieve all information for output
             img_idx, plate_idx = self.find_frame_by_plate_idx(i, batch_plates_len)
-            plate_coords = batch_plates[img_idx][plate_idx]
+            plate_coords_conf = batch_plates[img_idx][plate_idx]
 
             output[img_idx].append({
-                'plate_num': plate_num,
-                'confidence': confidence,
-                'plate_coords': plate_coords,
+                'plate': {
+                    'coords': plate_coords_conf[:4],
+                    'confidence': plate_coords_conf[-1]
+                },
+                'plate_num': {
+                    'numbers': plate_num,
+                    'confidence': confidence
+                },
                 'status': status
             })
 
