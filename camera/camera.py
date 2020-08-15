@@ -94,6 +94,7 @@ class Camera:
         self._is_started = True
         self.thread = threading.Thread(target=self._updating, args=())
         self.thread.start()
+        print('camera started: {}'.format(self.cam_ip))
 
     def start_accumulate(self):
         """To start putting frames into self.accum_frames. Please call this function only after calling start()"""
