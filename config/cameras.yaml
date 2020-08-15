@@ -1,7 +1,7 @@
 properties:
   num_votes: 8
-
-# trigger_zone is a list of tuple
+  new_car_time_patient: 5
+# trigger_zone is a list of tuple of [x, y] points in anti-clockwise direction
 cameras:
   camera1:
     type: 'entrance'
