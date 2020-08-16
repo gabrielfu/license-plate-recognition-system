@@ -24,17 +24,44 @@ class LPR():
                             {
                                 'plate': {
                                     'coords': (x1, y1, x2, y2),
-                                    'confidence': 0.99
+                                    'confidence': 0.99 # yolo class conf
                                 },
                                 'plate_num': {
                                     'numbers': 'AB1234',
-                                    'confidence': 0.99
+                                    'confidence': 0.99 # min character conf
                                 },
                                 'status': 'success'
                             }
                         ]
                     ]
         '''
+                   
+        def find_frame_by_plate_idx(target_plate_idx, batch_plates_len):
+            '''
+            Inputs
+                target_plate_idx: idx of plate in the flattened list of all plates
+                batch_plates_len: number of plates in each frames
+            Outputs:
+                i: idx of frame
+                p: idx of plate in that frame
+
+            E.g.
+                batch_plates_len == [2,0,4]
+                    Meaning that there are 2 plates in first image, no plate in second image and 4 plates in third image
+                target_plate_idx == 5
+                    Meaning that we want the 6th plate (indexing from 0)
+                Output == (2, 3)
+                    Meaning that it is the 4th plate in the 3rd image (indexing from 0)
+            '''
+            i = 0
+            p = 0        
+            if target_plate_idx >= sum(batch_plates_len):
+                raise IndexError(f'Finding {target_plate_idx+1}th plate but there are only {sum(batch_plates_len)} plates')
+            while p + batch_plates_len[i] <= target_plate_idx:
+                # next frame
+                p += batch_plates_len[i]
+                i += 1
+            return i, target_plate_idx-p
 
         # Batch detect plates
         batch_preds = self.detector.predict(frames)
@@ -48,7 +75,7 @@ class LPR():
                 h, w = frame.shape[:2]
                 # For each plate in the frame
                 for pred in preds:
-                    x1,y1,x2,y2,conf,_,_ = pred
+                    x1,y1,x2,y2,_,clsconf,_ = pred
                     # Pad extra space to detected plate img
                     pad_w = int((x2-x1)*self.pad_x)
                     pad_h = int((y2-y1)*self.pad_y)
@@ -56,7 +83,7 @@ class LPR():
                     y2 = int(min(y2+pad_h,h))
                     x1 = int(max(x1-pad_w,0))
                     x2 = int(min(x2+pad_w,w))
-                    plates.append((x1,y1,x2,y2, conf))
+                    plates.append((x1,y1,x2,y2, clsconf))
             batch_plates.append(plates)
             batch_plates_imgs.extend(frame[y1:y2, x1:x2] for x1,y1,x2,y2,_ in plates)
 
@@ -76,7 +103,7 @@ class LPR():
             # Predict plate num from CharRecognizer
             if preds is not None:
                 for box in preds:
-                    x1,y1,x2,y2 = box
+                    x1,y1,x2,y2 = box[:4]
                     chars.append(batch_plates_imgs[i][y1:y2, x1:x2])
                 plate_num, confidence = self.recognizer.predict(chars)
                 status = 'success'
@@ -85,12 +112,12 @@ class LPR():
                 plate_num = ''
                 confidence = 0.0
                 status = 'no characters segmented'
-            
+ 
             # Retrieve all information for output
-            img_idx, plate_idx = self.find_frame_by_plate_idx(i, batch_plates_len)
-            plate_coords_conf = batch_plates[img_idx][plate_idx]
+            frame_idx, plate_idx = find_frame_by_plate_idx(i, batch_plates_len)
+            plate_coords_conf = batch_plates[frame_idx][plate_idx]
 
-            output[img_idx].append({
+            output[frame_idx].append({
                 'plate': {
                     'coords': plate_coords_conf[:4],
                     'confidence': plate_coords_conf[-1]
@@ -103,32 +130,3 @@ class LPR():
             })
 
         return output
-
-    @staticmethod
-    def find_frame_by_plate_idx(target_plate_idx, batch_plates_len):
-        '''
-        Inputs
-            target_plate_idx: idx of plate in the flattened list of all plates
-            batch_plates_len: number of plates in each frames
-        Outputs:
-            i: idx of frame
-            p: idx of plate in that frame
-
-        E.g.
-            batch_plates_len == [2,0,4]
-                Meaning that there are 2 plates in first image, no plate in second image and 4 plates in third image
-            target_plate_idx == 5
-                Meaning that we want the 6th plate (indexing from 0)
-            Output == (2, 3)
-                Meaning that it is the 4th plate in the 3rd image (indexing from 0)
-        '''
-        i = 0
-        p = 0        
-        while True:
-            l = batch_plates_len[i]
-            if p + l <= target_plate_idx:
-                # next frame
-                i += 1
-                p += l
-            else:
-                return i, target_plate_idx-p
