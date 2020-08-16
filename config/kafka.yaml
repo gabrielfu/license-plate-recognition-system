@@ -1,0 +1,3 @@
+topic: 'test'
+bootstrap_servers: '0.0.0.0:9092'
+max_stored_msg: 20
