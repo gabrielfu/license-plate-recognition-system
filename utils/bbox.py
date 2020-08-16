@@ -1,67 +1,55 @@
-import cv2
+from shapely.geometry import Polygon
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-import sys
-import os
 
-from .preprocess import resize, pad_to_square, cv_resize, cv_preprocess
-
-def get_correct_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
-
-
-def to_tensor(img):
+def dot_inside_bbox(dot, bbox):
     '''
-    Tranform np array(W,H,C) to torch tensor (C,W,H)
+    Check if dot is inside bbox
+    dot: (x,y)
+    bbox: (x1, y1, x2, y2)
     '''
-    max_pixel_value = np.max(img)
-    if max_pixel_value > 1.:
-        img = torch.tensor(img, dtype=torch.float32)/255.
-        img = img.permute(2,0,1)
+    x1,y1,x2,y2 = bbox
+    dot_x, dot_y = dot
+    if x1 < dot_x and x2 > dot_x and y1 < dot_y and y2 > dot_y:
+        return True
     else:
-        img = torch.tensor(img, dtype=torch.float32)
-        img = img.permute(2,0,1)
-    return img
+        return False
 
-
-def load_classes(path):
-    """
-    Loads class labels at 'path'
-    """
-    fp = open(path, "r")
-    names = fp.read().split("\n")[:-1]
-    return names
-
-
-def prepare_raw_imgs(imgs_list, mode, img_size):
+def polygons_intersect(trigger_zone, bbox):
     '''
-    Resize, pad to square & make it torch.tensor() for model input
-
-    Inputs
-        imgs_list: list of imgs (each img is a BGR np array read from openCV)
+    Check if two polygons intersect with each other
+    trigger_zone: [bot_left, bot_right, top_right, top_left], all in tuple(x,y)
+    bbox: (x1, y1, x2, y2)
     '''
-    imgs_list = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in imgs_list]
-        
-    if mode == 'torch':
-        # Torch model preprocess pipeline
-        imgs = [to_tensor(img) for img in imgs_list]
-        imgs_shapes = [(img.shape[1],img.shape[2]) for img in imgs]
-        imgs = [resize(pad_to_square(img, pad_value=128/255)[0],img_size) for img in imgs]
-    elif mode == 'cv2':
-        # OpenCV model preprocess pipeline
-        imgs_shapes = [(img.shape[0],img.shape[1]) for img in imgs_list]
-        imgs = [cv_resize(cv_preprocess(img)[0],(img_size, img_size)) for img in imgs_list]
-        imgs = [to_tensor(img) for img in imgs]
+    # bot_left, bot_right, top_right, top_left
+    trigger_polygon = Polygon(trigger_zone)
 
-    return torch.stack(imgs), imgs_shapes
+    x1, y1, x2, y2 = bbox
+    bbox_polygon = Polygon([(x1, y2), (x2,y2), (x2,y1), (x1, y1)])
+    return bbox_polygon.intersects(trigger_polygon)  # True/False
 
+def compute_iou(bbox1, bbox2):
+    '''
+    Compute IOU of 2 bboxes
+    bbox1: (x1, y1, x2, y2)\n
+    bbox2: (x1, y1, x2, y2)
+    '''
+    x11, y11, x12, y12 = bbox1[:4]
+    x21, y21, x22, y22 = bbox2[:4]
+
+    intersect = max(min(x12,x22)-max(x11,x21), 0) * max(min(y12,y22)-max(y11,y21), 0)
+    if intersect == 0:
+        return 0
+
+    area1 = (x12-x11) * (y12-y11)
+    area2 = (x22-x21) * (y22-y21)
+    return intersect / (area1+area2-intersect+1e-16)
+
+def compute_area(box):
+    '''
+    Compute area of a bbox
+    '''
+    x1, y1, x2, y2 = box[:4]
+    return (x2-x1)*(y2-y1)
 
 def rescale_boxes(boxes, current_dim, original_shape):
     """ Rescales bounding boxes to the original shape """
@@ -78,7 +66,6 @@ def rescale_boxes(boxes, current_dim, original_shape):
     boxes[:, 2] = ((boxes[:, 2] - pad_x // 2) / unpad_w) * orig_w
     boxes[:, 3] = ((boxes[:, 3] - pad_y // 2) / unpad_h) * orig_h
     return boxes
-
 
 def xywh2xyxy(inputs):
     outputs = inputs.new(inputs.shape)
@@ -130,25 +117,6 @@ def compute_ious(box1, box2, x1y1x2y2=True):
 
     return iou
 
-def compute_iou(bbox1, bbox2):
-    '''
-    bbox1: (x1, y1, x2, y2)\n
-    bbox2: (x1, y1, x2, y2)
-    '''
-    x11, y11, x12, y12 = bbox1[:4]
-    x21, y21, x22, y22 = bbox2[:4]
-
-    intersect = max(min(x12,x22)-max(x11,x21), 0) * max(min(y12,y22)-max(y11,y21), 0)
-    if intersect == 0:
-        return 0
-
-    area1 = (x12-x11) * (y12-y11)
-    area2 = (x22-x21) * (y22-y21)
-    return intersect / (area1+area2-intersect+1e-16)
-
-def compute_area(box):
-    x1, y1, x2, y2 = box[:4]
-    return (x2-x1)*(y2-y1)
 
 def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
     """
@@ -253,35 +221,3 @@ def diff_cls_nms(img_detections, nms_thres=0.4, sort_by='conf'):
 
     return valid_img_detections
 
-def majority_vote(ocr_results):
-    '''
-    Input:
-    - ocr_results: list of tuples e.g. [('PV1954',0.99),('PV1954',0.97),('PV1934',0.91),...]
-
-    Output:
-    - tuple(num, conf) e.g. ('PV1954', 0.99)
-    '''
-    if not ocr_results:  # Empty
-        return ''
-
-    counter = {}
-    license_num_prob = {}
-    for license_num, min_conf in ocr_results:
-        # Count number of votes
-        counter[license_num] = counter.get(license_num, 0) + 1
-
-#             if license_num not in license_num_max_prob:
-#                 license_num_max_prob[license_num] = avg_conf
-#             elif avg_conf > license_num_max_prob[license_num]:
-#                 license_num_max_prob[license_num] = avg_conf
-        if license_num not in license_num_prob:
-            license_num_prob[license_num] = [min_conf]
-        else:
-            license_num_prob[license_num].append(min_conf)
-    
-    license_num_prob = {num:(sum(scores)/len(scores)) for num, scores in license_num_prob.items()}
-    # Unqiue majority --> output major result, Multi/No majority --> output highest avg_conf result
-    major_candidates = [lic for lic, count in counter.items() if count == max(counter.values())]
-    major_candidates_conf = {lic:license_num_prob[lic] for lic in major_candidates}
-    lic_num, conf = max(major_candidates_conf.items(), key=lambda x: x[1])
-    return lic_num, conf

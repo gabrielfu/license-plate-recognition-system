@@ -3,7 +3,8 @@ import cv2
 import yaml
 
 from .modules.charnet import Charnet
-from .utils.utils import to_tensor, get_correct_path
+from utils.image_preprocess import to_tensor
+from utils.utils import get_correct_path
 
 class CharRecognizer():
     def __init__(self, cfg):

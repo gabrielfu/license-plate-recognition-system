@@ -1,7 +1,8 @@
 import numpy as np
 
 from .modules.yolo_trt import YOLO_trt
-from .utils.utils import load_classes, get_correct_path, diff_cls_nms
+from utils.utils import load_classes, get_correct_path
+from utils.bbox import diff_cls_nms
 
 class CarLocatorTRT():
     def __init__(self, cfg):

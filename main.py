@@ -1,13 +1,49 @@
 import sys
+import os
 import time
 
-from .camera.manager import CameraManager
-from .utils import read_yaml
-from .models.utils import compute_area, majority_vote
+sys.path.insert(0, os.getcwd())
+
+from camera.manager import CameraManager
+from utils.utils import read_yaml
+from utils.bbox import compute_area
 
 def exit_app():
     ''' Shut down the whole application'''
     sys.exit()
+
+def majority_vote(ocr_results):
+    '''
+    Input:
+    - ocr_results: list of tuples e.g. [('PV1954',0.99),('PV1954',0.97),('PV1934',0.91),...]
+
+    Output:
+    - tuple(num, conf) e.g. ('PV1954', 0.99)
+    '''
+    if not ocr_results:  # Empty
+        return ''
+
+    counter = {}
+    license_num_prob = {}
+    for license_num, min_conf in ocr_results:
+        # Count number of votes
+        counter[license_num] = counter.get(license_num, 0) + 1
+
+#             if license_num not in license_num_max_prob:
+#                 license_num_max_prob[license_num] = avg_conf
+#             elif avg_conf > license_num_max_prob[license_num]:
+#                 license_num_max_prob[license_num] = avg_conf
+        if license_num not in license_num_prob:
+            license_num_prob[license_num] = [min_conf]
+        else:
+            license_num_prob[license_num].append(min_conf)
+    
+    license_num_prob = {num:(sum(scores)/len(scores)) for num, scores in license_num_prob.items()}
+    # Unqiue majority --> output major result, Multi/No majority --> output highest avg_conf result
+    major_candidates = [lic for lic, count in counter.items() if count == max(counter.values())]
+    major_candidates_conf = {lic:license_num_prob[lic] for lic in major_candidates}
+    lic_num, conf = max(major_candidates_conf.items(), key=lambda x: x[1])
+    return lic_num, conf
 
 if __name__ == '__main__':
 
