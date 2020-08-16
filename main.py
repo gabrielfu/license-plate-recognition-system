@@ -6,7 +6,7 @@ import logging
 sys.path.insert(0, os.getcwd())
 
 from camera.manager import CameraManager
-from kafka.sender import KafkaSender
+from sender.sender import KafkaSender
 from utils.utils import read_yaml
 from utils.bbox import compute_area
 from logger_handlers import setup_logging
@@ -179,7 +179,9 @@ if __name__ == '__main__':
         if license_numbers:
             logger.info(f'LPR result: {license_numbers}')
 
-        # @mike TODO:
-        # Output the license number and correcponding camera ip, and maybe the coords(?) to kafka
-        # For example:
-        ## kafka_sender.send(license_numbers)
+        # send results with kafka
+        try:
+            sender.send(license_numbers)
+        except:
+            logger.exception(f'Error in sender')
+
