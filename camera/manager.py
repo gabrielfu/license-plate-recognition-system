@@ -40,7 +40,7 @@ class CameraManager:
             # elif cam_type == 'bot':
             #     cam_type = CameraType.bot
             else:
-                raise NotImplementedError('Unknown cam_type: {}'.format(cam_type))
+                self.logger.error('Unimplemented cam_type: {}'.format(cam_type))
             trigger_zone = v['trigger_zone']
             cameras[cam_ip] = {'camera': Camera(cam_ip, cam_type, self.num_votes),
                                'trigger_zone': Polygon(trigger_zone),
