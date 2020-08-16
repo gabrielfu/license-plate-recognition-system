@@ -42,7 +42,10 @@ def load_classes(path):
 
 def prepare_raw_imgs(imgs_list, mode, img_size):
     '''
-    imgs_list: list of imgs (each img is a BGR np array read from openCV)
+    Resize, pad to square & make it torch.tensor() for model input
+
+    Inputs
+        imgs_list: list of imgs (each img is a BGR np array read from openCV)
     '''
     imgs_list = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in imgs_list]
         
@@ -249,3 +252,36 @@ def diff_cls_nms(img_detections, nms_thres=0.4, sort_by='conf'):
         img_detections = [img_detections[j] for j in to_keep_idx]
 
     return valid_img_detections
+
+def majority_vote(ocr_results):
+    '''
+    Input:
+    - ocr_results: list of tuples e.g. [('PV1954',0.99),('PV1954',0.97),('PV1934',0.91),...]
+
+    Output:
+    - tuple(num, conf) e.g. ('PV1954', 0.99)
+    '''
+    if not ocr_results:  # Empty
+        return ''
+
+    counter = {}
+    license_num_prob = {}
+    for license_num, min_conf in ocr_results:
+        # Count number of votes
+        counter[license_num] = counter.get(license_num, 0) + 1
+
+#             if license_num not in license_num_max_prob:
+#                 license_num_max_prob[license_num] = avg_conf
+#             elif avg_conf > license_num_max_prob[license_num]:
+#                 license_num_max_prob[license_num] = avg_conf
+        if license_num not in license_num_prob:
+            license_num_prob[license_num] = [min_conf]
+        else:
+            license_num_prob[license_num].append(min_conf)
+    
+    license_num_prob = {num:(sum(scores)/len(scores)) for num, scores in license_num_prob.items()}
+    # Unqiue majority --> output major result, Multi/No majority --> output highest avg_conf result
+    major_candidates = [lic for lic, count in counter.items() if count == max(counter.values())]
+    major_candidates_conf = {lic:license_num_prob[lic] for lic in major_candidates}
+    lic_num, conf = max(major_candidates_conf.items(), key=lambda x: x[1])
+    return lic_num, conf
