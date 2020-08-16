@@ -10,7 +10,6 @@ class CameraManager:
         self.new_car_time_patient = config['properties']['new_car_time_patient']
         self.new_car_iou_threshold = config['properties']['new_car_iou_threshold']
         self.cameras = self.init_cameras(config['cameras'])
-        self.logger = logging.getLogger(__name__)
 
     def start_cameras_streaming(self):
         """To start all the cameras
@@ -40,7 +39,7 @@ class CameraManager:
             # elif cam_type == 'bot':
             #     cam_type = CameraType.bot
             else:
-                self.logger.error('Unimplemented cam_type: {}'.format(cam_type))
+                logging.error('Unimplemented cam_type: {}'.format(cam_type))
             trigger_zone = v['trigger_zone']
             cameras[cam_ip] = {'camera': Camera(cam_ip, cam_type, self.num_votes),
                                'trigger_zone': Polygon(trigger_zone),
@@ -97,7 +96,7 @@ class CameraManager:
                     self.trigger(camera_dict, triggered_coords)
                     continue
             else:
-                self.logger.warning('UNEXPECTED: Not implemented non-entrance trigger logic!')
+                logging.warning('UNEXPECTED: Not implemented non-entrance trigger logic!')
 
     def trigger(self, camera_dict, triggered_coords):
         """Make the camera to start accumulate frames, also update last_triggered_coords and last_triggered_time

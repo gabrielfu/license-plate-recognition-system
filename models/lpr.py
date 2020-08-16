@@ -13,8 +13,6 @@ class LPR():
         self.pad_x = cfg['lpr']['pad_x']
         self.pad_y = cfg['lpr']['pad_y']
 
-        self.logger = logging.getLogger(__name__)
-
     def predict(self, frames):
         '''
         Inputs
