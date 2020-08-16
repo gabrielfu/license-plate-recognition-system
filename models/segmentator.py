@@ -93,7 +93,7 @@ class Segmentator():
 
         # Image preprocessing
         if not img_lst: # Empty imgs list
-            return []
+            return [], []
 
         input_imgs, imgs_shapes = prepare_raw_imgs(img_lst, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)

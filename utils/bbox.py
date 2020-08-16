@@ -1,4 +1,4 @@
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, box
 import torch
 
 def dot_inside_bbox(dot, bbox):
@@ -14,18 +14,29 @@ def dot_inside_bbox(dot, bbox):
     else:
         return False
 
-def polygons_intersect(trigger_zone, bbox):
+def bbox_polygon_intersect(trigger_zone, bbox):
     '''
-    Check if two polygons intersect with each other
-    trigger_zone: [bot_left, bot_right, top_right, top_left], all in tuple(x,y)
-    bbox: (x1, y1, x2, y2)
+    Check if bbox intersect with trigger_zone Polygon
+    Inputs
+        trigger_zone: shapely.Geometry.Polygon
+        bbox: tuple (x1,y1,x2,y2)
+    Outputs
+        Boolean
     '''
-    # bot_left, bot_right, top_right, top_left
-    trigger_polygon = Polygon(trigger_zone)
+    bbox_polygon = box(*bbox)
+    return bbox_polygon.intersects(trigger_zone)
 
-    x1, y1, x2, y2 = bbox
-    bbox_polygon = Polygon([(x1, y2), (x2,y2), (x2,y1), (x1, y1)])
-    return bbox_polygon.intersects(trigger_polygon)  # True/False
+def bbox_polygon_iou(trigger_zone, bbox):
+    '''
+    Compute IoU between bbox & trigger_zone Polygon
+    Inputs
+        trigger_zone: shapely.Geometry.Polygon
+        bbox: tuple (x1,y1,x2,y2)
+    Outputs
+        IoU (float)
+    '''
+    bbox_polygon = box(*bbox)
+    return bbox_polygon.intersection(trigger_zone).area / bbox_polygon.union(trigger_zone).area
 
 def compute_iou(bbox1, bbox2):
     '''

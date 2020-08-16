@@ -1,6 +1,7 @@
 properties:
   num_votes: 8
-  new_car_time_patient: 5
+  new_car_time_patient: 5.0
+  new_car_iou_threshold: 0.35
 # trigger_zone is a list of tuple of [x, y] points in anti-clockwise direction
 cameras:
   camera1:

@@ -1,3 +1,4 @@
+import logging
 from .plate_detector import PlateDetector
 from .segmentator import Segmentator
 from .char_recognizer import CharRecognizer
@@ -11,6 +12,8 @@ class LPR():
         # How much to pad in detected plates before segmenting (0~1)
         self.pad_x = cfg['lpr']['pad_x']
         self.pad_y = cfg['lpr']['pad_y']
+
+        self.logger = logging.getLogger(__name__)
 
     def predict(self, frames):
         '''
@@ -56,7 +59,7 @@ class LPR():
             i = 0
             p = 0        
             if target_plate_idx >= sum(batch_plates_len):
-                raise IndexError(f'Finding {target_plate_idx+1}th plate but there are only {sum(batch_plates_len)} plates')
+                self.logger.error(f'IndexOutOfRange: Finding {target_plate_idx+1}th plate but there are only {sum(batch_plates_len)} plates')
             while p + batch_plates_len[i] <= target_plate_idx:
                 # next frame
                 p += batch_plates_len[i]
