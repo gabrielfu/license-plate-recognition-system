@@ -26,18 +26,32 @@ class PlateDetector():
             self.model.load_state_dict(torch.load(weights_path, map_location=self.device))
         self.model.eval()  # Set in evaluation mode
     
-    def predict(self, imgs_list):
+    def predict(self, img_lst):
         '''
-        *** Can be empty imgs_list but cannot be a list with any None inside ***
-        Support arbitrary Batchsize prediction, be careful of device memory usage
-        output: (x1, y1, x2, y2, conf, cls_conf, cls_pred) for each tensor in a list
+        Inputs
+            img_lst: list of np.array(h,w,c)
+                Can be empty
+                Cannot have any None elements
+        Outputs
+            list of list of tuple 
+            # for each frame
+            [
+                # list if multiple plates
+                [
+                    (x1, y1, x2, y2, conf, cls_conf, cls_pred),
+                    (x1, y1, x2, y2, conf, cls_conf, cls_pred),
+                ],
+                # None if no plates
+                None
+            ]
+        output:  for each tensor in a list
         '''
         ### Yolo prediction
         # Configure input
-        if not imgs_list: # Empty imgs list
+        if not img_lst: # Empty imgs list
             return []
 
-        input_imgs, imgs_shapes = prepare_raw_imgs(imgs_list, self.pred_mode, self.img_size)
+        input_imgs, imgs_shapes = prepare_raw_imgs(img_lst, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)
 
         # Get detections

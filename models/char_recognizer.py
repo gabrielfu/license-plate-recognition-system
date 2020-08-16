@@ -19,6 +19,9 @@ class CharRecognizer():
         self.model.eval()
 
     def preprocess(self, img, input_size, mode):
+        '''
+        Resize & normalize images for model input
+        '''
         if mode == 'BGR':
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, input_size, interpolation=cv2.INTER_CUBIC)
@@ -27,6 +30,13 @@ class CharRecognizer():
         return img
 
     def predict(self, img_lst, mode='RGB'):
+        '''
+        Inputs
+            img_lst: list of np.arrays(h,w,c)
+        Outputs
+            tuple('AB1234', 0.99)
+            confidence is the minimal prediction confidence among characters
+        '''
         with torch.no_grad():
             output_str = ''
             img_lst = [self.preprocess(img, (self.img_size, self.img_size), mode) for img in img_lst]

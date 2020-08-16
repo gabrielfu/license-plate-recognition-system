@@ -32,6 +32,24 @@ class Segmentator():
         self.char_line_threshold = cfg['char_line_threshold']
 
     def predict(self, plates_list):
+        '''
+        Inputs
+            img_lst: list of np.array(h,w,c)
+                Can be empty
+                Cannot have any None elements
+        Outputs
+            list of list of tuple 
+            # for each frame
+            [
+                # for each plate
+                [
+                    np.array([x1,y1,x2,y2]),
+                    np.array([x1,y1,x2,y2]),
+                ],
+                # None if no character is segmented
+                None
+            ]
+        '''
         boxes_list, boxes_centres_list = self.get_rois(plates_list)
         for i, (boxes, boxes_centres) in enumerate(zip(boxes_list, boxes_centres_list)):
             if boxes is None:
@@ -39,31 +57,56 @@ class Segmentator():
             boxes_list[i] = self.sort_boxes_single(boxes, boxes_centres)
         return boxes_list
 
-    def get_rois(self, imgs_list):
+    def get_rois(self, img_lst):
         '''
-        *** Can be empty imgs_list but cannot be a list with any None inside ***
-        Support arbitrary Batchsize prediction, be careful of device memory usage
-        output: (x1, y1, x2, y2, conf, cls_conf, cls_pred) for each tensor in a list
+        Inputs
+            img_lst: list of np.array(h,w,c)
+                Can be empty
+                Cannot have any None elements
+        Outputs
+            boxes_list: 
+            # for each frame
+            [
+                # np.array(num_char, 4) 
+                [
+                    [x1,y1,x2,y2],
+                    [x1,y1,x2,y2]
+                ],
+                # None if no character is segmented
+                None
+            ]
+            
+            boxes_centres_list: 
+            # for each frame
+            [
+                # Box centre
+                [
+                    (x,y),
+                    (x,y)
+                ],
+                # None if no char
+                None
+            ]
         '''
-        ### Yolo prediction
-        # Configure input
-        if not imgs_list: # Empty imgs list
+
+        # Image preprocessing
+        if not img_lst: # Empty imgs list
             return []
 
-        input_imgs, imgs_shapes = prepare_raw_imgs(imgs_list, self.pred_mode, self.img_size)
+        input_imgs, imgs_shapes = prepare_raw_imgs(img_lst, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)
 
-        # Get detections
+        # Yolo prediction
         with torch.no_grad():
             img_detections = self.model(input_imgs)
             img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
 
+        # Rescale boxes to original image
         for i, (detection, img_shape) in enumerate(zip(img_detections, imgs_shapes)):
             if detection is not None:
-                # Rescale boxes to original image
                 img_detections[i] = rescale_boxes(detection, self.img_size, img_shape).numpy()
         
-        ### Post processing
+        # Post processing
         boxes_list = [box.astype('int')[:, :4] if box is not None else box for box in img_detections]
         for i, boxes in enumerate(boxes_list): # 3D array of each char coords in each imgs
             if boxes is None:
@@ -81,10 +124,10 @@ class Segmentator():
                 ymax = max(0,ymax)
                 xmin = max(0,xmin)
                 xmax = max(0,xmax)
-                ymin = min(imgs_list[i].shape[0],ymin)
-                ymax = min(imgs_list[i].shape[0],ymax)
-                xmin = min(imgs_list[i].shape[1],xmin)
-                xmax = min(imgs_list[i].shape[1],xmax)
+                ymin = min(img_lst[i].shape[0],ymin)
+                ymax = min(img_lst[i].shape[0],ymax)
+                xmin = min(img_lst[i].shape[1],xmin)
+                xmax = min(img_lst[i].shape[1],xmax)
 
                 boxes[j] = (xmin, ymin, xmax, ymax)
 

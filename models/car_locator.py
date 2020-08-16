@@ -32,14 +32,16 @@ class CarLocator():
         self.target_classes = ['car', 'bus', 'truck']
         self.idx2targetcls = {idx:cls_name for idx, cls_name in enumerate(self.classes) if cls_name in self.target_classes}
     
-    def predict(self, imgs_list, sort_by='conf'):
+    def predict(self, img_lst, sort_by='conf'):
         '''
-        *** Can be empty imgs_list but cannot be a list with any None inside ***
-        Support arbitrary Batchsize prediction, be careful of device memory usage
+        Inputs
+            img_lst: list of np.array(h,w,c)
+                Can be empty
+                Cannot have any None elements
 
         output:
             [   
-                # For each frame
+                # For each frame (empty list if no car in the frame)
                 [
                     # For each detected car
                     {
@@ -49,11 +51,11 @@ class CarLocator():
                 ]
             ]
         '''
-        if not imgs_list: # Empty imgs list
+        if not img_lst: # Empty imgs list
             return []
 
         # Prepare input
-        input_imgs, imgs_shapes = prepare_raw_imgs(imgs_list, self.pred_mode, self.img_size)
+        input_imgs, imgs_shapes = prepare_raw_imgs(img_lst, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)
 
         # Yolo prediction
