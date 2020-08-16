@@ -1,0 +1,53 @@
+1. download Java JDK
+https://www.oracle.com/java/technologies/javase-jdk14-downloads.html
+Windows x64 Installer
+Install Java in C:\Java\jdk-14
+
+2. Set Java Paths
+User variables:
+JAVA_HOME=C:\Java\jdk-14
+System variables:
+Path %JAVA_HOME%\bin
+
+3. test java: open cmd
+> java -version
+
+4. download zookeeper 3.6.0
+http://zookeeper.apache.org/releases.html
+choose binary (apache-zookeeper-3.6.0-bin.tar.gz) (will get error if non-bin)
+unzip to C:\Apache
+
+5. Go to C:\Apache\apache-zookeeper-3.6.0-bin\conf
+rename zoo_sample.cfg to zoo.cfg
+open it
+change dataDir=\tmp\data to dataDir=../logs
+
+6. Set Zookeeper Paths
+User variables:
+ZOOKEEPER_HOME=C:\Apache\apache-zookeeper-3.6.0-bin
+System variables:
+Path %ZOOKEEPER_HOME%\bin
+
+7. test zookeeper
+open cmd in C:\Apache\apache-zookeeper-3.6.0-bin\bin
+> zkserver
+
+8. download kafka 2.4.1
+http://kafka.apache.org/downloads.html
+Download binary matching Scala version
+if not using Scala, download 2.12, as recommended by Apache (kafka_2.12-2.4.1.tgz)
+
+9. config kafka
+open C:\Apache\kafka_2.12-2.4.1\config\server.properties
+change log.dirs=/tmp/kafka-logs to log.dirs=C:\Apache\kafka_2.12–2.4.1\logs
+
+10. Run kafka
+open cmd in C:\Apache\kafka_2.12–2.4.1\bin\windows
+> kafka-server-start.bat C:\Apache\kafka_2.12–2.4.1\config\server.properties
+
+11. Create topic
+open cmd in C:\Apache\kafka_2.12–2.4.1\bin\windows
+> kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+
+Notes: 
+By default, Apache Kafka will run on port 9092 and Apache Zookeeper will run on port 2181.

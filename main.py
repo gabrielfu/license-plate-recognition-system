@@ -6,6 +6,7 @@ import logging
 sys.path.insert(0, os.getcwd())
 
 from camera.manager import CameraManager
+from kafka.sender import KafkaSender
 from utils.utils import read_yaml
 from utils.bbox import compute_area
 from logger_handlers import setup_logging
@@ -23,7 +24,7 @@ def majority_vote(ocr_results):
     - tuple(num, conf) e.g. ('PV1954', 0.99)
     '''
     if not ocr_results:  # Empty
-        return ''
+        return 'Recognition fail', None
 
     counter = {}
     license_num_prob = {}
@@ -54,6 +55,7 @@ if __name__ == '__main__':
     cameras_cfg = read_yaml('config/cameras.yaml')
     models_cfg = read_yaml('config/models.yaml')
     logger_cfg = read_yaml('config/logger.yaml')
+    kafka_cfg = read_yaml('config/kafka.yaml')
 
     # Setup logging handlers & initialize logger
     setup_logging(logger_cfg)
@@ -73,6 +75,7 @@ if __name__ == '__main__':
             car_locator = CarLocator(models_cfg['car_locator'])
     except:
         logger.exception('Failed to initialize Car Locator!')
+        exit_app()
 
     logger.info('Initializing LPR...')
     try:
@@ -80,15 +83,26 @@ if __name__ == '__main__':
         lpr = LPR(models_cfg)
     except:
         logger.exception('Failed to initialize LPR!')
+        exit_app()
 
 
-    # Initialize cameras and start streaming
+    # Initialize cameras and start frame streaming
     logger.info('Streaming cameras...')
     try:
         camera_manager = CameraManager(cameras_cfg)
         camera_manager.start_cameras_streaming()
     except:
         logger.exception('Failed to stream camera!')
+        exit_app()
+
+    # Initialize kafka sender and start output streaming
+    logger.info('Streaming Kafka...')
+    try:
+        sender = KafkaSender(kafka_cfg)
+        sender.start_kafka_streaming()
+    except:
+        logger.exception('Failed to stream Kafka!')
+        exit_app()
 
     time.sleep(5)
 
