@@ -4,10 +4,14 @@ test.py
 
 # Gab
 nms.ipynb
+*.bat
 
 # model weights
 models/data/*.weights
 models/data/*.pth
+
+# logs
+logs/
 
 # assets
 assets/

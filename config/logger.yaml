@@ -1,0 +1,35 @@
+version: 1
+
+formatters:
+  standard:
+    format: "[%(asctime)s] %(levelname)s %(filename)s:%(funcName)s:%(lineno)d %(message)s"
+
+root:
+  level: INFO
+  handlers: [console, rotating_file_handler]
+  propagate: yes
+
+handlers:
+  # Output to terminal
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: standard
+    stream: ext://sys.stdout
+
+  # Output to single file
+  std_file_handler:
+    class: logging.FileHandler
+    level: INFO
+    formatter: standard
+    filename: logs/_today.log
+    encoding: utf8
+    
+  # Output to single file and perform timed file rotation
+  rotating_file_handler:
+    class: logger_handlers.CustomTimedRotatingHandler
+    level: INFO
+    formatter: standard
+    filename: logs/_today.log
+    encoding: utf8
+    when: midnight
