@@ -23,9 +23,8 @@ class Camera:
             cam_type (CameraType): camera type
             num_votes (int): max length of frames_lst
         """
-        self.logger = logging.getLogger(__name__)
         if cam_type not in CameraType:
-            self.logger.error("{}: Invalid camera type {}".format(cam_ip, cam_type))
+            logging.error("{}: Invalid camera type {}".format(cam_ip, cam_type))
 
         self.cam_ip = cam_ip
         self.cam_type = cam_type
@@ -80,7 +79,7 @@ class Camera:
             try:
                 self.accum_frames.put_nowait(frame)
             except queue.Full:
-                self.logger.exception(f'{self.cam_ip}: try to put frame when accum_frames is full')
+                logging.exception(f'{self.cam_ip}: try to put frame when accum_frames is full')
 
             if self.accum_frames.full():
                 self._is_accumulating = False
@@ -88,20 +87,20 @@ class Camera:
     def start(self):
         """To start reading frames """
         if self._is_started:
-            self.logger.warning(f'{self.cam_ip}: attempted to start camera when it has already started')
+            logging.warning(f'{self.cam_ip}: attempted to start camera when it has already started')
             return None
 
         self._is_started = True
         self.thread = threading.Thread(target=self._updating, args=())
         self.thread.start()
-        self.logger.info('Camera started: {}'.format(self.cam_ip))
+        logging.info('Camera started: {}'.format(self.cam_ip))
 
     def start_accumulate(self):
         """To start putting frames into self.accum_frames. Please call this function only after calling start()"""
         if self._is_accumulating:
-            self.logger.warning(f'{self.cam_ip}: started accumulating while previous accumulating process un-finished')
+            logging.warning(f'{self.cam_ip}: started accumulating while previous accumulating process un-finished')
         if not self.accum_frames.empty():
-            self.logger.warning(f'{self.cam_ip}: started accumulating while previous accumulated frames un-used')
+            logging.warning(f'{self.cam_ip}: started accumulating while previous accumulated frames un-used')
             self._clear_accum_frames()
         self._is_accumulating = True
 
@@ -117,7 +116,7 @@ class Camera:
                 try:
                     accum_frames.append(self.accum_frames.get_nowait())
                 except queue.Empty:
-                    self.logger.exception(f'{self.cam_ip}: try to get frame when accum_frames is empty')
+                    logging.exception(f'{self.cam_ip}: try to get frame when accum_frames is empty')
             accum_frames = np.array(accum_frames)
         return accum_frames
 
@@ -132,13 +131,13 @@ class Camera:
                 
     def reconnecting(self):
         """Try to reconnect untill succ"""
-        self.logger.warning(f'{self.cam_ip}: camera cannot read frame, trying to reconnect...')
+        logging.warning(f'{self.cam_ip}: camera cannot read frame, trying to reconnect...')
         while self._is_started:
             self.cap = cv2.VideoCapture(self.cam_ip)
             time.sleep(5)
             succ, _ = self.cap.read()
             if succ:
-                self.logger.warning(f'{self.cam_ip}: camera reconnected')
+                logging.warning(f'{self.cam_ip}: camera reconnected')
                 return True
 
     def stop(self):
