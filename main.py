@@ -9,7 +9,7 @@ from camera.manager import CameraManager
 from sender.sender import KafkaSender
 from utils.utils import read_yaml
 from utils.bbox import compute_area
-from logger_handlers import setup_logging
+from logger import setup_logging
 
 def exit_app():
     ''' Shut down the whole application'''
@@ -59,13 +59,12 @@ if __name__ == '__main__':
 
     # Setup logging handlers & initialize logger
     setup_logging(logger_cfg)
-    logger = logging.getLogger(__name__)
-    logger.info('-------------------------')
-    logger.info('Starting Application...')
+    logging.info('-------------------------')
+    logging.info('Starting Application...')
 
     # Import & initialize models
     use_trt = app_cfg['car_locator']['trt']
-    logger.info(f'Initializing Car Locator... (TensorRT={use_trt})')
+    logging.info(f'Initializing Car Locator... (TensorRT={use_trt})')
     try:
         if use_trt:
             from models.car_locator_trt import CarLocatorTRT
@@ -74,34 +73,34 @@ if __name__ == '__main__':
             from models.car_locator import CarLocator
             car_locator = CarLocator(models_cfg['car_locator'])
     except:
-        logger.exception('Failed to initialize Car Locator!')
+        logging.exception('Failed to initialize Car Locator!')
         exit_app()
 
-    logger.info('Initializing LPR...')
+    logging.info('Initializing LPR...')
     try:
         from models.lpr import LPR
         lpr = LPR(models_cfg)
     except:
-        logger.exception('Failed to initialize LPR!')
+        logging.exception('Failed to initialize LPR!')
         exit_app()
 
 
     # Initialize cameras and start frame streaming
-    logger.info('Streaming cameras...')
+    logging.info('Streaming cameras...')
     try:
         camera_manager = CameraManager(cameras_cfg)
         camera_manager.start_cameras_streaming()
     except:
-        logger.exception('Failed to stream camera!')
+        logging.exception('Failed to stream camera!')
         exit_app()
 
     # Initialize kafka sender and start output streaming
-    logger.info('Streaming Kafka...')
+    logging.info('Streaming Kafka...')
     try:
         sender = KafkaSender(kafka_cfg)
         sender.start_kafka_streaming()
     except:
-        logger.exception('Failed to stream Kafka!')
+        logging.exception('Failed to stream Kafka!')
         exit_app()
 
     time.sleep(5)
@@ -129,7 +128,7 @@ if __name__ == '__main__':
             for i in sorted(missing_cam_idx, reverse=True):
                 car_locations.insert(i, [])
         except:
-            logger.exception('Failed to predict car detection')
+            logging.exception('Failed to predict car detection')
         
         # Update the trigger status of all cameras based on car locations
         try:
@@ -138,7 +137,7 @@ if __name__ == '__main__':
             }
             camera_manager.update_camera_trigger_status(all_car_locations)
         except:
-            logger.exception('Error when triggering cameras')
+            logging.exception('Error when triggering cameras')
         
         # Predict license numbers
         # For each camera (as a batch)
@@ -168,7 +167,7 @@ if __name__ == '__main__':
                 # Perform majority vote & put into dict
                 license_numbers[ip] = majority_vote(plate_nums)
             except:
-                logger.exception(f'{ip}: Error in lpr prediction')
+                logging.exception(f'{ip}: Error in lpr prediction')
             
         '''
         license_numbers == {
@@ -177,11 +176,11 @@ if __name__ == '__main__':
         }
         '''
         if license_numbers:
-            logger.info(f'LPR result: {license_numbers}')
+            logging.info(f'LPR result: {license_numbers}')
 
         # send results with kafka
         try:
             sender.send(license_numbers)
         except:
-            logger.exception(f'Error in sender')
+            logging.exception(f'Error in sender')
 
