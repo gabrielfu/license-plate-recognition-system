@@ -7,9 +7,6 @@ import logging
 from datetime import datetime
 
 
-def cam_ip_to_cam_location(cam_ip):
-    return cam_ip
-
 def encode_json(m):
     return json.dumps(m).encode('ascii')
 
@@ -71,3 +68,7 @@ class KafkaSender:
             self.max_stored_msg.put_nowait(license_numbers)
         except queue.Full:
             logging.exception('Sender messages queue full!')
+
+    def stop(self):
+        self._is_started = False
+        self.thread.join()
