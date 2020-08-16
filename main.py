@@ -80,7 +80,7 @@ if __name__ == '__main__':
         for i, (ip, frames) in enumerate(all_frames.items()):
             frame = frames['new_frame']
             if frame is not None:
-                new_frames.append()
+                new_frames.append(frame)
             else:
                 missing_cam_idx.append(i)
 
@@ -129,6 +129,7 @@ if __name__ == '__main__':
             '123.0.0.2': ('CD5678', 0.88)
         }
         '''
+        print(time.strftime('%X'), license_numbers)
 
         # @mike TODO:
         # Output the license number and correcponding camera ip, and maybe the coords(?) to kafka
