@@ -218,15 +218,14 @@ if __name__ == '__main__':
             '123.0.0.2': ('CD5678', 0.88)
         }
         '''
+    
+        #####################################
+        ###       Output with Kafka       ###
+        #####################################
         if license_numbers:
             logging.info(f'LPR result: {license_numbers}')
-
-    #####################################
-    ###       Output with Kafka       ###
-    #####################################
-        # send results with kafka
-        try:
-            sender.send(license_numbers)
-        except:
-            logging.exception(f'Error in sender')
+            try:
+                sender.send(license_numbers)
+            except:
+                logging.exception(f'Error in sender')
 
