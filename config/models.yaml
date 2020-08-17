@@ -7,7 +7,7 @@ car_locator:
   class_path: models/data/coco.names
   conf_thres: 0.5
   nms_thres: 0.4
-  batch_size: 2
+  batch_size: 1
   n_cpu: 0
   img_size: 416
   pred_mode: torch
@@ -21,8 +21,8 @@ car_locator_trt:
   input_size: !!python/tuple [416, 416]
 
 lpr:
-  pad_x: 0.08
-  pad_y: 0.07
+  pad_x: 0.1
+  pad_y: 0.1
 
 plate_detector:
   model_cfg: models/data/yolov3_plate_191204.cfg
