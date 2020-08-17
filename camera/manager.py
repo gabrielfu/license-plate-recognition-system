@@ -83,23 +83,24 @@ class CameraManager:
             
             if camera_dict['camera'].cam_type == CameraType.entrance:
                 last_triggered_time = camera_dict['last_triggered_time']
+                cur_time = time.time()
                 camera_dict['last_triggered_coords'] = triggered_coords
-                camera_dict['last_triggered_time'] = time.time()
+                camera_dict['last_triggered_time'] = cur_time
                 # if this is the first time trigger
                 if camera_dict['last_triggered_coords'] is None:
                     camera_dict['camera'].start_accumulate()
                     logging.debug('Trigger type: first time trigger')
                     continue
                 # if the time difference between this car and last trigger car is large
-                if time.time() - last_triggered_time > self.new_car_time_patient:
+                if cur_time - last_triggered_time > self.new_car_time_patient:
                     camera_dict['camera'].start_accumulate()
-                    logging.debug('Trigger type: time window trigger')
+                    logging.debug(f'Trigger type: time window trigger: {cur_time - last_triggered_time} seconds')
                     continue
                 # if the iou between this car and last trigger car is large
                 new_car_iou = compute_iou(triggered_coords, camera_dict['last_triggered_coords'])
                 if new_car_iou < self.new_car_iou_threshold:
                     camera_dict['camera'].start_accumulate()
-                    logging.debug('Trigger type: iou trigger')
+                    logging.debug(f'Trigger type: iou trigger: {new_car_iou:.2f}')
                     continue
             else:
                 logging.warning('UNEXPECTED: Not implemented non-entrance trigger logic!')
