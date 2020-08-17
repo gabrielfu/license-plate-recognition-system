@@ -83,12 +83,13 @@ class CameraManager:
             
             if camera_dict['camera'].cam_type == CameraType.entrance:
                 last_triggered_time = camera_dict['last_triggered_time']
-                cur_time = time.time()
                 last_triggered_coords = camera_dict['last_triggered_coords']
+
+                cur_time = time.time()
                 camera_dict['last_triggered_coords'] = triggered_coords
                 camera_dict['last_triggered_time'] = cur_time
                 # if this is the first time trigger
-                if camera_dict['last_triggered_coords'] is None:
+                if last_triggered_coords is None:
                     camera_dict['camera'].start_accumulate()
                     logging.debug('Trigger type: first time trigger')
                     continue
