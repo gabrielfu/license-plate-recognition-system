@@ -82,6 +82,7 @@ class CameraManager:
                 continue
             
             if camera_dict['camera'].cam_type == CameraType.entrance:
+                camera_dict['last_triggered_coords'] = triggered_coords
                 # if this is the first time trigger
                 if camera_dict['last_triggered_coords'] is None:
                     self.trigger(camera_dict, triggered_coords)
@@ -105,7 +106,6 @@ class CameraManager:
         """Make the camera to start accumulate frames, also update last_triggered_coords and last_triggered_time
         """
         camera_dict['camera'].start_accumulate()
-        camera_dict['last_triggered_coords'] = triggered_coords
         camera_dict['last_triggered_time'] = time.time()
 
     @staticmethod
