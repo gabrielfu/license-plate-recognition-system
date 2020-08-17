@@ -134,7 +134,7 @@ if __name__ == '__main__':
             for i in range(0, len(frame_list), batch_size):
                 car_locations.append(
                     car_locator.predict(
-                        new_frames[i:min(i+batch_size, len(new_frames)],
+                        new_frames[i:min(i+batch_size, len(new_frames))],
                         sort_by='conf'))
             
             # Maintain same order between car_locations & all_frames.keys()
