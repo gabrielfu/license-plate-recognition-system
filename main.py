@@ -131,7 +131,7 @@ if __name__ == '__main__':
         try:
             batch_size = int(models_cfg['car_locator']['batch_size'])
             car_locations = []
-            for i in range(0, len(frame_list), batch_size):
+            for i in range(0, len(new_frames), batch_size):
                 car_locations.append(
                     car_locator.predict(
                         new_frames[i:min(i+batch_size, len(new_frames))],
