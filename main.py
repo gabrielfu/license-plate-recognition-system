@@ -50,6 +50,9 @@ def majority_vote(ocr_results):
 
 if __name__ == '__main__':
 
+    #####################################
+    ###       App Initialization      ###
+    #####################################
     # Read configs
     app_cfg = read_yaml('config/app.yaml')
     cameras_cfg = read_yaml('config/cameras.yaml')
@@ -102,28 +105,38 @@ if __name__ == '__main__':
     except:
         logging.exception('Failed to stream Kafka!')
         exit_app()
-
     time.sleep(5)
 
-    # Run application
     while True:
         # Get all the frames for prediction
         all_frames = camera_manager.get_all_frames()
 
-        # TODO: handle batch size
+    #####################################
+    ###         Car detection         ###
+    #####################################
+        #############
+        # Fixed batch prediction
+        ############
         # Extract new frame for each camera
         new_frames = []
         missing_cam_idx = []
-        for i, (ip, frames) in enumerate(all_frames.items()):
+        for i, frames in enumerate(all_frames.values()):
             frame = frames['new_frame']
             if frame is not None:
                 new_frames.append(frame)
             else:
                 missing_cam_idx.append(i)
 
-        # Batch predict car detection
+        # Fixed batch predict car detection
         try:
-            car_locations = car_locator.predict(new_frames)
+            batch_size = int(models_cfg['car_locator']['batch_size'])
+            car_locations = []
+            for i in range(0, len(frame_list), batch_size):
+                car_locations.append(
+                    car_locator.predict(
+                        new_frames[i:min(i+batch_size, len(new_frames)],
+                        sort_by='conf'))
+            
             # Maintain same order between car_locations & all_frames.keys()
             for i in sorted(missing_cam_idx, reverse=True):
                 car_locations.insert(i, [])
@@ -138,7 +151,34 @@ if __name__ == '__main__':
             camera_manager.update_camera_trigger_status(all_car_locations)
         except:
             logging.exception('Error when triggering cameras')
-        
+
+        # #############
+        # # Single img prediction
+        # ############
+        # all_car_locations = {}
+        # for i, (ip, frames) in enumerate(all_frames.items()):
+        #     # Extract new frame for each camera
+        #     frame = frames['new_frame']
+        #     if frame is None:
+        #         continue
+        #     # Single img prediction
+        #     try:
+        #         car = car_locator.predict([frame], sort_by='conf'))
+        #         all_car_locations[ip] = car
+        #     except:
+        #         logging.exception(f'{ip}: Failed to predict car detection')
+        #         continue
+
+        # # Update the trigger status of all cameras based on car locations
+        # try:
+        #     camera_manager.update_camera_trigger_status(all_car_locations)
+        # except:
+        #     logging.exception('Error when triggering cameras')
+        #     continue
+
+    #####################################
+    ###      License Recognition      ###
+    #####################################
         # Predict license numbers
         # For each camera (as a batch)
         license_numbers = {}
@@ -178,6 +218,9 @@ if __name__ == '__main__':
         if license_numbers:
             logging.info(f'LPR result: {license_numbers}')
 
+    #####################################
+    ###       Output with Kafka       ###
+    #####################################
         # send results with kafka
         try:
             sender.send(license_numbers)
