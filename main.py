@@ -135,7 +135,7 @@ if __name__ == '__main__':
             batch_size = int(models_cfg['car_locator']['batch_size'])
             car_locations = []
             for i in range(0, len(new_frames), batch_size):
-                car_locations.append(
+                car_locations.extend(
                     car_locator.predict(
                         new_frames[i:min(i+batch_size, len(new_frames))],
                         sort_by='conf'))
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         #         continue
         #     # Single img prediction
         #     try:
-        #         car = car_locator.predict([frame], sort_by='conf'))
+        #         car = car_locator.predict([frame], sort_by='conf'))[0]
         #         all_car_locations[ip] = car
         #     except:
         #         logging.exception(f'{ip}: Failed to predict car detection')
