@@ -169,7 +169,7 @@ if __name__ == '__main__':
                     continue
                 # Single img prediction
                 try:
-                    car = car_locator.predict([frame], sort_by='conf'))[0]
+                    car = car_locator.predict([frame], sort_by='conf')[0]
                     all_car_locations[ip] = car
                 except:
                     logging.exception(f'{ip}: Failed to predict car detection')
