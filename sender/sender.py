@@ -59,7 +59,7 @@ class KafkaSender:
             date_time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
             for cam_ip, (license_num, conf) in msg.items():
                 if conf is None: # Recognition fail
-                    logging.warning('Recognition fail at {}'.format(date_time))
+                    logging.warning(f'{cam_ip}: recognition failed')
                     continue
                 output = {}
                 output['Camera ID'] = cam_ip
