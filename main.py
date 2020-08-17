@@ -61,6 +61,9 @@ if __name__ == '__main__':
     kafka_cfg = read_yaml('config/kafka.yaml')
 
     # Setup logging handlers & initialize logger
+    log_dir = logger_cfg['log_dir']
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
     setup_logging(logger_cfg)
     logging.info('-------------------------')
     logging.info('Starting Application...')

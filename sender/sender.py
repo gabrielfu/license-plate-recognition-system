@@ -18,14 +18,20 @@ class KafkaSender:
 
         self.messages = queue.Queue(maxsize=self.max_stored_msg)
         self._is_started = False
+        self.producer = self.init_producer()
 
+    def init_producer(self):
+        first_time = True
         while True:
             try:
                 self.producer =  KafkaProducer(bootstrap_servers=self.bootstrap_servers, 
                                                value_serializer=encode_json)
-                break
+                return self.producer
             except:
-                logging.error('Failed to initialize Kafka producer, re-initializing...: bootstrap_servers {}'.format(self.bootstrap_servers))
+                if first_time:
+                    logging.error('Failed to initialize Kafka producer, re-initializing...: bootstrap_servers {}'.format(self.bootstrap_servers))
+                    first_time = False
+                time.sleep(5)
                 continue
 
     def start_kafka_streaming(self):
@@ -65,7 +71,7 @@ class KafkaSender:
 
     def send(self, license_numbers):
         try:
-            self.max_stored_msg.put_nowait(license_numbers)
+            self.messages.put_nowait(license_numbers)
         except queue.Full:
             logging.exception('Sender messages queue full!')
 
