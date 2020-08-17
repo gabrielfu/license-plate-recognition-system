@@ -59,6 +59,8 @@ if __name__ == '__main__':
     models_cfg = read_yaml('config/models.yaml')
     logger_cfg = read_yaml('config/logger.yaml')
     kafka_cfg = read_yaml('config/kafka.yaml')
+    
+    car_batch_size = int(models_cfg['car_locator']['batch_size'])
 
     # Setup logging handlers & initialize logger
     log_dir = logger_cfg['log_dir']
@@ -116,68 +118,70 @@ if __name__ == '__main__':
 
     #####################################
     ###         Car detection         ###
-    #####################################
+    #####################################        
         #############
-        # Fixed batch prediction
+        # If Fixed batch prediction
         ############
-        # Extract new frame for each camera
-        new_frames = []
-        missing_cam_idx = []
-        for i, frames in enumerate(all_frames.values()):
-            frame = frames['new_frame']
-            if frame is not None:
-                new_frames.append(frame)
-            else:
-                missing_cam_idx.append(i)
+        if car_batch_size > 1:
+            # Extract new frame for each camera
+            new_frames = []
+            missing_cam_idx = []
+            for i, frames in enumerate(all_frames.values()):
+                frame = frames['new_frame']
+                if frame is not None:
+                    new_frames.append(frame)
+                else:
+                    missing_cam_idx.append(i)
 
-        # Fixed batch predict car detection
-        try:
-            batch_size = int(models_cfg['car_locator']['batch_size'])
-            car_locations = []
-            for i in range(0, len(new_frames), batch_size):
-                car_locations.extend(
-                    car_locator.predict(
-                        new_frames[i:min(i+batch_size, len(new_frames))],
-                        sort_by='conf'))
+            # Fixed batch predict car detection
+            try:
+                car_locations = []
+                for i in range(0, len(new_frames), car_batch_size):
+                    car_locations.extend(
+                        car_locator.predict(
+                            new_frames[i:min(i+car_batch_size, len(new_frames))],
+                            sort_by='conf'))
+                
+                # Maintain same order between car_locations & all_frames.keys()
+                for i in sorted(missing_cam_idx, reverse=True):
+                    car_locations.insert(i, [])
+            except:
+                logging.exception('Failed to predict car detection')
             
-            # Maintain same order between car_locations & all_frames.keys()
-            for i in sorted(missing_cam_idx, reverse=True):
-                car_locations.insert(i, [])
-        except:
-            logging.exception('Failed to predict car detection')
-        
-        # Update the trigger status of all cameras based on car locations
-        try:
-            all_car_locations = {
-                ip: car for ip, car in zip(all_frames.keys(), car_locations)
-            }
-            camera_manager.update_camera_trigger_status(all_car_locations)
-        except:
-            logging.exception('Error when triggering cameras')
+            # Update the trigger status of all cameras based on car locations
+            try:
+                all_car_locations = {
+                    ip: car for ip, car in zip(all_frames.keys(), car_locations)
+                }
+                camera_manager.update_camera_trigger_status(all_car_locations)
+            except:
+                logging.exception('Error when triggering cameras')
 
-        # #############
-        # # Single img prediction
-        # ############
-        # all_car_locations = {}
-        # for i, (ip, frames) in enumerate(all_frames.items()):
-        #     # Extract new frame for each camera
-        #     frame = frames['new_frame']
-        #     if frame is None:
-        #         continue
-        #     # Single img prediction
-        #     try:
-        #         car = car_locator.predict([frame], sort_by='conf'))[0]
-        #         all_car_locations[ip] = car
-        #     except:
-        #         logging.exception(f'{ip}: Failed to predict car detection')
-        #         continue
+        #############
+        # Else, Single img prediction
+        ############
+        else:
+            all_car_locations = {}
+            for i, (ip, frames) in enumerate(all_frames.items()):
+                # Extract new frame for each camera
+                frame = frames['new_frame']
+                if frame is None:
+                    continue
+                # Single img prediction
+                try:
+                    car = car_locator.predict([frame], sort_by='conf'))[0]
+                    all_car_locations[ip] = car
+                except:
+                    logging.exception(f'{ip}: Failed to predict car detection')
+                    continue
 
-        # # Update the trigger status of all cameras based on car locations
-        # try:
-        #     camera_manager.update_camera_trigger_status(all_car_locations)
-        # except:
-        #     logging.exception('Error when triggering cameras')
-        #     continue
+            # Update the trigger status of all cameras based on car locations
+            try:
+                camera_manager.update_camera_trigger_status(all_car_locations)
+            except:
+                logging.exception('Error when triggering cameras')
+                continue
+
 
     #####################################
     ###      License Recognition      ###
