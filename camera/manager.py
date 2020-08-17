@@ -74,8 +74,8 @@ class CameraManager:
         Args:
             all_car_locations (dict('cam_ip': [dict('coords': tuple(int x1, int y1, int x2, int y2), 'confidence': float), ...]))
         """
-        for cam_ip, camera_dict in self.cameras.items():
-            car_locations = all_car_locations[cam_ip]
+        for cam_ip, car_locations in all_car_locations.items():
+            camera_dict = self.cameras[cam_ip]
             trigger_zone = camera_dict['trigger_zone']
             triggered_coords = self.find_triggered_car_coords(trigger_zone, car_locations)
             if triggered_coords is None:
