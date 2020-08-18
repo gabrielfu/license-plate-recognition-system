@@ -257,7 +257,7 @@ if __name__ == '__main__':
         
         if loop_count >= print_every:
             avg_time = float(loop_time_ttl) / (loop_count+1e-16)
-            if avg_time < 0.01: # if not all empty loops
+            if avg_time > 0.01: # if not all empty loops
                 all_fps = camera_manager.get_all_fps()
                 logging.info(f'{loop_count}-loop average time: {avg_time:.2f} s')
                 logging.info(f'Camera fps: {all_fps}')
