@@ -111,7 +111,11 @@ if __name__ == '__main__':
     except:
         logging.critical('Failed to start Kafka sender!')
         exit_app()
-    time.sleep(5)
+        
+    try:
+        time.sleep(app_cfg['app']['sleep_after_init'])
+    except:
+        pass
 
     while True:
         # Get all the frames for prediction
