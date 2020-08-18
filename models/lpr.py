@@ -57,7 +57,7 @@ class LPR():
             i = 0
             p = 0        
             if target_plate_idx >= sum(batch_plates_len):
-                self.logger.error(f'IndexOutOfRange: Finding {target_plate_idx+1}th plate but there are only {sum(batch_plates_len)} plates')
+                logging.error(f'IndexOutOfRange: Finding {target_plate_idx+1}th plate but there are only {sum(batch_plates_len)} plates')
             while p + batch_plates_len[i] <= target_plate_idx:
                 # next frame
                 p += batch_plates_len[i]
