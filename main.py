@@ -67,7 +67,7 @@ if __name__ == '__main__':
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     setup_logging(logger_cfg)
-    logging.info('-------------------------')
+    logging.info('-------------------------------------------------------')
     logging.info('Starting Application...')
 
     # Import & initialize models
@@ -227,7 +227,7 @@ if __name__ == '__main__':
         ###       Output with Kafka       ###
         #####################################
         if license_numbers:
-            logging.info(f'LPR result: {license_numbers}')
+            logging.info('LPR result: {\n'+'\n'.join([repr(k)+':'+repr(v) for k,v in license_numbers.items()])+'\n}')     
             try:
                 sender.send(license_numbers)
             except:
