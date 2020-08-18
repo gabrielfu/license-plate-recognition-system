@@ -9,6 +9,8 @@ nms.ipynb
 # model weights
 models/data/*.weights
 models/data/*.pth
+models/data/*.trt
+models/data/*.engine
 
 # logs
 logs/
