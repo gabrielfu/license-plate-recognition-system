@@ -61,8 +61,6 @@ if __name__ == '__main__':
     logger_cfg = read_yaml('config/logger.yaml')
     kafka_cfg = read_yaml('config/kafka.yaml')
     
-    car_batch_size = int(models_cfg['car_locator']['batch_size'])
-
     # Setup logging handlers & initialize logger
     log_dir = logger_cfg['log_dir']
     if not os.path.exists(log_dir):
@@ -70,21 +68,30 @@ if __name__ == '__main__':
     setup_logging(logger_cfg)
     logging.info('-------------------------------------------------------')
     logging.info('Starting Application...')
-
-    # Import & initialize models
+    
+    # Check if use trt or not
     use_trt = app_cfg['car_locator']['trt']
+    if use_trt:
+        if models_cfg['plate_detector_trt']['max_batch_size'] < cameras_cfg['properties']['num_votes']:
+            logging.critical(f'Number of majority votes ({cameras_cfg['properties']['num_votes']}) is smaller than maximum batch size of PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})')
+            exit_app()
+            
+    # Import & initialize Car Locator
     logging.info(f'Initializing Car Locator... (TensorRT={use_trt})')
     try:
         if use_trt:
             from models.car_locator_trt import CarLocatorTRT
             car_locator = CarLocatorTRT(models_cfg['car_locator_trt'])
+            car_batch_size = int(models_cfg['car_locator_trt']['max_batch_size'])
         else:
             from models.car_locator import CarLocator
             car_locator = CarLocator(models_cfg['car_locator'])
+            car_batch_size = int(models_cfg['car_locator']['batch_size'])
     except:
         logging.critical('Failed to initialize Car Locator!')
         exit_app()
-
+        
+    # Import & initialize LPR
     logging.info(f'Initializing LPR... (TensorRT={use_trt})')
     try:
         from models.lpr import LPR
@@ -92,7 +99,6 @@ if __name__ == '__main__':
     except:
         logging.critical('Failed to initialize LPR!')
         exit_app()
-
 
     # Initialize cameras and start frame streaming
     logging.info('Starting cameras...')
