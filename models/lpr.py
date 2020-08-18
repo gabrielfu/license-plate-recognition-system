@@ -4,14 +4,14 @@ from .char_recognizer import CharRecognizer
 
 class LPR():
     def __init__(self, cfg, use_trt=False):
+        self.segmentator = Segmentator(cfg['segmentator'])
+        self.recognizer = CharRecognizer(cfg['char_recognizer'])
         if use_trt:
             from .plate_detector_trt import PlateDetectorTRT
             self.detector = PlateDetectorTRT(cfg['plate_detector_trt'])
         else:
             from .plate_detector import PlateDetector
             self.detector = PlateDetector(cfg['plate_detector'])
-        self.segmentator = Segmentator(cfg['segmentator'])
-        self.recognizer = CharRecognizer(cfg['char_recognizer'])
 
         # How much to pad in detected plates before segmenting (0~1)
         self.pad_x = cfg['lpr']['pad_x']

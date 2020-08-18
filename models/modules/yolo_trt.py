@@ -1,9 +1,9 @@
 import numpy as np
 import cv2
+import logging
 
 import tensorrt as trt
 import pycuda.driver as cuda
-import pycuda.autoinit
 
 from utils.tensorrt import post_processing
 
@@ -66,7 +66,8 @@ def do_inference(context, bindings, inputs, outputs, stream):
 
 class TrtYOLO(object):
     def __init__(self, engine_path, input_size, n_classes, conf, nms_conf, max_batch_size):
-        self.TRT_LOGGER = trt.Logger()
+        cuda.init()
+        self.TRT_LOGGER = trt.Logger(min_severity=trt.Logger.ERROR)
         self._init_trt(engine_path)
         self.input_size = input_size
         self.n_classes = n_classes
@@ -76,15 +77,15 @@ class TrtYOLO(object):
 
     def _get_engine(self, engine_path):
         # If a serialized engine exists, use it instead of building an engine.
-        print("Reading engine from file {}".format(engine_path))
+        logging.info(f"Reading engine from file {engine_path}")
         with open(engine_path, "rb") as f, trt.Runtime(self.TRT_LOGGER) as runtime:
             return runtime.deserialize_cuda_engine(f.read())
 
     def _init_trt(self, engine_path):
         self.engine = self._get_engine(engine_path)
-        self.buffers = allocate_buffers(self.engine)
-        self.context = self.engine.create_execution_context()
-        self.inputs, self.outputs, self.bindings, self.stream = self.buffers
+#         self.buffers = allocate_buffers(self.engine)
+#         self.context = self.engine.create_execution_context()
+#         self.inputs, self.outputs, self.bindings, self.stream = self.buffers
 
     def _preprocess_img(self, img):
         resized = cv2.resize(img, self.input_size, interpolation=cv2.INTER_LINEAR)
@@ -107,10 +108,16 @@ class TrtYOLO(object):
         '''
 
         imgs_array = self._preprocess_img_lst(img_lst)
-
-        self.inputs[0].host = imgs_array
-
-        trt_outputs = do_inference(self.context, bindings=self.bindings, inputs=self.inputs, outputs=self.outputs, stream=self.stream)
+        
+        
+#         self.inputs[0].host = imgs_array
+        
+        with self.engine.create_execution_context() as context:
+            inputs, outputs, bindings, stream = allocate_buffers(self.engine)
+            inputs[0].host = imgs_array
+            trt_outputs = do_inference(context, bindings=bindings, inputs=inputs, outputs=outputs, stream=stream)
+            
+#         print(trt_outputs)
 
         trt_outputs[0] = trt_outputs[0].reshape(self.max_batch_size, -1, 1, 4)
         trt_outputs[1] = trt_outputs[1].reshape(self.max_batch_size, -1, self.n_classes)

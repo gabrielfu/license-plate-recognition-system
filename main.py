@@ -11,6 +11,8 @@ from utils.utils import read_yaml
 from utils.bbox import compute_area
 from logger import setup_logging
 
+import pycuda.autoinit
+
 def exit_app():
     ''' Shut down the whole application'''
     logging.info('Shutting down application')
@@ -76,6 +78,15 @@ if __name__ == '__main__':
             logging.critical(f"Number of majority votes ({cameras_cfg['properties']['num_votes']}) is smaller than maximum batch size of PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})")
             exit_app()
             
+    # Import & initialize LPR
+    logging.info(f'Initializing LPR... (TensorRT={use_trt})')
+    try:
+        from models.lpr import LPR
+        lpr = LPR(models_cfg, use_trt)
+    except:
+        logging.critical('Failed to initialize LPR!')
+        exit_app()
+
     # Import & initialize Car Locator
     logging.info(f'Initializing Car Locator... (TensorRT={use_trt})')
     try:
@@ -91,15 +102,6 @@ if __name__ == '__main__':
         logging.critical('Failed to initialize Car Locator!')
         exit_app()
         
-    # Import & initialize LPR
-    logging.info(f'Initializing LPR... (TensorRT={use_trt})')
-    try:
-        from models.lpr import LPR
-        lpr = LPR(models_cfg, use_trt)
-    except:
-        logging.critical('Failed to initialize LPR!')
-        exit_app()
-
     # Initialize cameras and start frame streaming
     logging.info('Starting cameras...')
     try:
@@ -235,5 +237,5 @@ if __name__ == '__main__':
             try:
                 sender.send(license_numbers)
             except:
-                logging.critical(f"Sender failed to send LPR results!")
+                logging.critical("Sender failed to send LPR results!")
 
