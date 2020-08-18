@@ -37,7 +37,7 @@ def bbox_polygon_intersection(trigger_zone, bbox):
         Boolean
     '''
     bbox_polygon = box(*bbox)
-    return bbox_polygon.intersects(trigger_zone).area
+    return bbox_polygon.intersection(trigger_zone).area
 
 def bbox_polygon_iou(trigger_zone, bbox):
     '''
