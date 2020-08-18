@@ -161,6 +161,10 @@ class Camera:
             succ, _ = self.cap.read()
             if succ:
                 logging.warning(f'{self.cam_ip}: camera reconnected')
+                # reset fps
+                with self.lock:
+                    self.num_frames = 0
+                    self.start_time = time.monotonic()
                 return True
 
     def stop(self):
