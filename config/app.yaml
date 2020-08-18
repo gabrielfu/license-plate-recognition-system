@@ -2,4 +2,4 @@ app:
   sleep_after_init: 3.0
 
 car_locator:
-  trt: False
+  trt: True

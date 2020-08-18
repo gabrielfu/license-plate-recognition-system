@@ -78,6 +78,10 @@ if __name__ == '__main__':
             logging.critical(f"Number of majority votes ({cameras_cfg['properties']['num_votes']}) is smaller than maximum batch size of PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})")
             exit_app()
             
+    '''
+    Needs to initialize all torch models before initializing trt models
+    Otherwise, context issues / models will predict None all the time
+    '''
     # Import & initialize LPR
     logging.info(f'Initializing LPR... (TensorRT={use_trt})')
     try:

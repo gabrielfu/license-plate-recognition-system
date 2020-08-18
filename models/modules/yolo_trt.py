@@ -101,6 +101,7 @@ class TrtYOLO(object):
 
     def detect(self, img_lst):
         '''
+        Allocate buffers each prediction on the fly to avoid context issues
         inputs:
             - img_lst: list of BGR np arrays
         outputs:
