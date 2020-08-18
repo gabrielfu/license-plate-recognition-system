@@ -71,6 +71,9 @@ if __name__ == '__main__':
     logging.info('-------------------------------------------------------')
     logging.info('Starting Application...')
     
+    # Print loop time every x loops
+    print_every = int(app_cfg['app']['print_time_every_loops'])
+    
     # Check if use trt or not
     use_trt = app_cfg['car_locator']['trt']
     if use_trt:
@@ -129,16 +132,22 @@ if __name__ == '__main__':
     except:
         pass
 
+    #####################################
+    ###          Start Loop           ###
+    #####################################   
+    loop_count = 0
+    loop_time_ttl = 0.0
     while True:
+        loop_start = time.time()
         # Get all the frames for prediction
         all_frames = camera_manager.get_all_frames()
 
-    #####################################
-    ###         Car detection         ###
-    #####################################        
-        #############
+        #####################################
+        ###         Car detection         ###
+        #####################################        
+        #----------------------------------
         # If Fixed batch prediction
-        ############
+        #----------------------------------
         if car_batch_size > 1:
             # Extract new frame for each camera
             new_frames = []
@@ -167,9 +176,9 @@ if __name__ == '__main__':
                 except:
                     logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
 
-        #############
+        #----------------------------------
         # Else, Single img prediction
-        ############
+        #----------------------------------
         else:
             # all_car_locations = {}
             for i, (ip, frames) in enumerate(all_frames.items()):
@@ -193,9 +202,9 @@ if __name__ == '__main__':
                     continue
 
 
-    #####################################
-    ###      License Recognition      ###
-    #####################################
+        #####################################
+        ###      License Recognition      ###
+        #####################################
         # Predict license numbers
         # For each camera (as a batch)
         license_numbers = {}
@@ -242,4 +251,14 @@ if __name__ == '__main__':
                 sender.send(license_numbers)
             except:
                 logging.critical("Sender failed to send LPR results!")
+                
+        loop_time_ttl += (time.time() - loop_start)
+        loop_count += 1
+        
+        if loop_count >= print_every:
+            all_fps = camera_manager.get_all_fps()
+            logging.info(f'{loop_count}-loop average time: {float(loop_time_ttl) / (loop_count+1e-16):.2f} s')
+            logging.info(f'Camera fps: {all_fps}')
+            loop_count = 0
+            loop_time_ttl = 0.0
 

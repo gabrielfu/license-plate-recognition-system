@@ -1,5 +1,6 @@
 app:
   sleep_after_init: 3.0
+  print_time_every_loops: 500
 
 car_locator:
   trt: True
