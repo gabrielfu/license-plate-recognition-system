@@ -40,7 +40,7 @@ class Segmentator():
                 Can be empty
                 Cannot have any None elements
         Outputs
-            list of list of tuple 
+            list of list of np.array 
             # for each frame
             [
                 # for each plate
@@ -69,11 +69,8 @@ class Segmentator():
             boxes_list: 
             # for each frame
             [
-                # np.array(num_char, 4) 
-                [
-                    [x1,y1,x2,y2],
-                    [x1,y1,x2,y2]
-                ],
+                # x1,y1,x2,y2
+                np.array(num_char, 4) 
                 # None if no character is segmented
                 None
             ]
