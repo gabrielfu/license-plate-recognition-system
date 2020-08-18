@@ -73,7 +73,7 @@ if __name__ == '__main__':
     use_trt = app_cfg['car_locator']['trt']
     if use_trt:
         if models_cfg['plate_detector_trt']['max_batch_size'] < cameras_cfg['properties']['num_votes']:
-            logging.critical(f'Number of majority votes ({cameras_cfg['properties']['num_votes']}) is smaller than maximum batch size of PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})')
+            logging.critical(f"Number of majority votes ({cameras_cfg['properties']['num_votes']}) is smaller than maximum batch size of PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})")
             exit_app()
             
     # Import & initialize Car Locator
