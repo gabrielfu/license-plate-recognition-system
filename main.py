@@ -125,13 +125,13 @@ if __name__ == '__main__':
         if car_batch_size > 1:
             # Extract new frame for each camera
             new_frames = []
-            cam_ip = []
-            for ip, frames in enumerate(all_frames.items()):
+            cam_ips = []
+            for ip, frames in all_frames.items():
                 frame = frames['new_frame']
                 if frame is not None:
                     new_frames.append(frame)
                 else:
-                    cam_ip.append(ip)
+                    cam_ips.append(ip)
 
             # Fixed batch predict car detection
             for i in range(0, len(new_frames), car_batch_size):
@@ -146,7 +146,7 @@ if __name__ == '__main__':
                 # Update the trigger status of each batch cameras based on car locations
                 try:
                     all_car_locations = {
-                        ip: car for ip, car in zip(cam_ip[i:min(i+car_batch_size, len(new_frames))], car_locations)
+                        ip: car for ip, car in zip(cam_ips[i:min(i+car_batch_size, len(new_frames))], car_locations)
                     }
                     camera_manager.update_camera_trigger_status(all_car_locations)
                 except:
