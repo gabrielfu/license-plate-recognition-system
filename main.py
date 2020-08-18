@@ -82,7 +82,7 @@ if __name__ == '__main__':
             from models.car_locator import CarLocator
             car_locator = CarLocator(models_cfg['car_locator'])
     except:
-        logging.fatal('Failed to initialize Car Locator!')
+        logging.critical('Failed to initialize Car Locator!')
         exit_app()
 
     logging.info('Initializing LPR...')
@@ -90,7 +90,7 @@ if __name__ == '__main__':
         from models.lpr import LPR
         lpr = LPR(models_cfg)
     except:
-        logging.fatal('Failed to initialize LPR!')
+        logging.critical('Failed to initialize LPR!')
         exit_app()
 
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
         camera_manager = CameraManager(cameras_cfg)
         camera_manager.start_cameras_streaming()
     except:
-        logging.fatal('Failed to start camera!')
+        logging.critical('Failed to start camera!')
         exit_app()
 
     # Initialize kafka sender and start output streaming
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         sender = KafkaSender(kafka_cfg)
         sender.start_kafka_streaming()
     except:
-        logging.fatal('Failed to start Kafka sender!')
+        logging.critical('Failed to start Kafka sender!')
         exit_app()
     time.sleep(5)
 
