@@ -4,7 +4,7 @@ import cv2
 from .modules.darknet import Darknet
 from utils.image_preprocess import to_tensor, prepare_raw_imgs
 from utils.utils import load_classes, get_correct_path
-from utils.bbox import non_max_suppression, rescale_boxes
+from utils.bbox import non_max_suppression, rescale_boxes_with_pad
 
 class Segmentator():
     def __init__(self, cfg):
@@ -106,7 +106,7 @@ class Segmentator():
         # Rescale boxes to original image
         for i, (detection, img_shape) in enumerate(zip(img_detections, imgs_shapes)):
             if detection is not None:
-                img_detections[i] = rescale_boxes(detection, self.img_size, img_shape).numpy()
+                img_detections[i] = rescale_boxes_with_pad(detection, self.img_size, img_shape).numpy()
         
         # Post processing
         boxes_list = [box.astype('int')[:, :4] if box is not None else box for box in img_detections]

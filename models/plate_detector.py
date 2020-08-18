@@ -4,7 +4,7 @@ import cv2
 from .modules.darknet import Darknet
 from utils.image_preprocess import to_tensor, prepare_raw_imgs
 from utils.utils import load_classes, get_correct_path
-from utils.bbox import non_max_suppression, rescale_boxes
+from utils.bbox import non_max_suppression, rescale_boxes_with_pad
 
 class PlateDetector():
     def __init__(self, cfg):
@@ -46,17 +46,15 @@ class PlateDetector():
                 # None if no plates
                 None
             ]
-        output:  for each tensor in a list
         '''
-        ### Yolo prediction
-        # Configure input
         if not img_lst: # Empty imgs list
             return []
 
+        # Prepare input
         input_imgs, imgs_shapes = prepare_raw_imgs(img_lst, self.pred_mode, self.img_size)
         input_imgs = input_imgs.to(self.device)
 
-        # Get detections
+        # Yolo prediction
         with torch.no_grad():
             img_detections = self.model(input_imgs)
             img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
@@ -64,6 +62,6 @@ class PlateDetector():
         for i, (detection, img_shape) in enumerate(zip(img_detections, imgs_shapes)):
             if detection is not None:
                 # Rescale boxes to original image
-                img_detections[i] = rescale_boxes(detection, self.img_size, img_shape).numpy()
+                img_detections[i] = rescale_boxes_with_pad(detection, self.img_size, img_shape).numpy()
 
         return img_detections

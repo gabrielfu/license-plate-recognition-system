@@ -1,5 +1,6 @@
 from shapely.geometry import Polygon, box
 import torch
+import numpy as np
 
 def dot_inside_bbox(dot, bbox):
     '''
@@ -63,7 +64,27 @@ def compute_area(box):
     return (x2-x1)*(y2-y1)
 
 def rescale_boxes(boxes, current_dim, original_shape):
-    """ Rescales bounding boxes to the original shape """
+    """
+    Rescales bounding boxes to the original shape
+    Resizes directly and doesn't maintain aspect ratio
+    Output:
+        np.array(n,7)
+    """
+    orig_h, orig_w = original_shape
+    # Rescale bounding boxes to dimension of original image
+    boxes[:, 0] = np.maximum(0, (boxes[:, 0] * orig_w)).astype('int')
+    boxes[:, 1] = np.maximum(0, boxes[:, 1] * orig_h).astype('int')
+    boxes[:, 2] = np.minimum(orig_w, boxes[:, 2] * orig_w).astype('int')
+    boxes[:, 3] = np.minimum(orig_h, boxes[:, 3] * orig_h).astype('int')
+    return boxes
+
+def rescale_boxes_with_pad(boxes, current_dim, original_shape):
+    """ 
+    Rescales bounding boxes to the original shape 
+    Maintains aspect ratio & pad to shape
+    Output:
+        list of (x1,y1,x2,y2,conf,cls_conf,cls)
+    """
     orig_h, orig_w = original_shape
     # The amount of padding that was added
     pad_x = max(orig_h - orig_w, 0) * (current_dim / max(original_shape))

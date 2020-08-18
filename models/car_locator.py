@@ -4,7 +4,7 @@ import cv2
 from .modules.darknet import Darknet
 from utils.image_preprocess import to_tensor, prepare_raw_imgs
 from utils.utils import load_classes, get_correct_path
-from utils.bbox import non_max_suppression, rescale_boxes, diff_cls_nms
+from utils.bbox import non_max_suppression, rescale_boxes_with_pad, diff_cls_nms
 
 class CarLocator():
     def __init__(self, cfg):
@@ -71,7 +71,7 @@ class CarLocator():
         for i, (img_detection, img_shape) in enumerate(zip(imgs_detections, imgs_shapes)): # for each image
             if img_detection is not None:
                 # Rescale boxes to original image
-                img_detection = rescale_boxes(img_detection, self.img_size, img_shape).numpy()
+                img_detection = rescale_boxes_with_pad(img_detection, self.img_size, img_shape).numpy()
 
                 # Filter out wanted classes and perform diff class NMS      
                 img_detection = [det for det in img_detection if int(det[-1]) in self.idx2targetcls]
