@@ -125,43 +125,38 @@ if __name__ == '__main__':
         if car_batch_size > 1:
             # Extract new frame for each camera
             new_frames = []
-            missing_cam_idx = []
-            for i, frames in enumerate(all_frames.values()):
+            cam_ip = []
+            for ip, frames in enumerate(all_frames.items()):
                 frame = frames['new_frame']
                 if frame is not None:
                     new_frames.append(frame)
                 else:
-                    missing_cam_idx.append(i)
+                    cam_ip.append(ip)
 
             # Fixed batch predict car detection
-            try:
-                car_locations = []
-                for i in range(0, len(new_frames), car_batch_size):
-                    car_locations.extend(
-                        car_locator.predict(
-                            new_frames[i:min(i+car_batch_size, len(new_frames))],
-                            sort_by='conf'))
+            for i in range(0, len(new_frames), car_batch_size):
+                try:
+                    car_locations = car_locator.predict(
+                        new_frames[i:min(i+car_batch_size, len(new_frames))],
+                        sort_by='conf')
                 
-                # Maintain same order between car_locations & all_frames.keys()
-                for i in sorted(missing_cam_idx, reverse=True):
-                    car_locations.insert(i, [])
-            except:
-                logging.exception('Failed to predict car detection')
+                except:
+                    logging.exception('Failed to predict car detection')
             
-            # Update the trigger status of all cameras based on car locations
-            try:
-                all_car_locations = {
-                    ip: car for ip, car in zip(all_frames.keys(), car_locations)
-                }
-                camera_manager.update_camera_trigger_status(all_car_locations)
-            except:
-                logging.exception('Error when triggering cameras')
+                # Update the trigger status of each batch cameras based on car locations
+                try:
+                    all_car_locations = {
+                        ip: car for ip, car in zip(cam_ip[i:min(i+car_batch_size, len(new_frames))]), car_locations)
+                    }
+                    camera_manager.update_camera_trigger_status(all_car_locations)
+                except:
+                    logging.exception('Error when triggering cameras')
 
         #############
         # Else, Single img prediction
         ############
         else:
-            all_car_locations = {}
+            # all_car_locations = {}
             for i, (ip, frames) in enumerate(all_frames.items()):
                 # Extract new frame for each camera
                 frame = frames['new_frame']
@@ -170,17 +165,17 @@ if __name__ == '__main__':
                 # Single img prediction
                 try:
                     car = car_locator.predict([frame], sort_by='conf')[0]
-                    all_car_locations[ip] = car
+                    car_locations = {ip: car}
                 except:
                     logging.exception(f'{ip}: Failed to predict car detection')
                     continue
 
-            # Update the trigger status of all cameras based on car locations
-            try:
-                camera_manager.update_camera_trigger_status(all_car_locations)
-            except:
-                logging.exception('Error when triggering cameras')
-                continue
+                # Update the trigger status of all cameras based on car locations
+                try:
+                    camera_manager.update_camera_trigger_status(car_locations)
+                except:
+                    logging.exception('Error when triggering cameras')
+                    continue
 
 
     #####################################
