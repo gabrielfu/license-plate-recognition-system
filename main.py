@@ -85,10 +85,10 @@ if __name__ == '__main__':
         logging.critical('Failed to initialize Car Locator!')
         exit_app()
 
-    logging.info('Initializing LPR...')
+    logging.info(f'Initializing LPR... (TensorRT={use_trt})')
     try:
         from models.lpr import LPR
-        lpr = LPR(models_cfg)
+        lpr = LPR(models_cfg, use_trt)
     except:
         logging.critical('Failed to initialize LPR!')
         exit_app()

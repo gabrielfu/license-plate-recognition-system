@@ -35,15 +35,12 @@ class PlateDetector():
                 Can be empty
                 Cannot have any None elements
         Outputs
-            list of list of tuple 
+            list of np.arrays
             # for each frame
             [
-                # list if multiple plates
-                [
-                    (x1, y1, x2, y2, conf, cls_conf, cls_pred),
-                    (x1, y1, x2, y2, conf, cls_conf, cls_pred),
-                ],
+                # np.array if have n >= 1 plates (x1, y1, x2, y2, conf, cls_conf, cls_pred,)
                 # None if no plates
+                np.array(n, 7),
                 None
             ]
         '''
