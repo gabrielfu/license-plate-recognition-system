@@ -27,6 +27,18 @@ def bbox_polygon_intersect(trigger_zone, bbox):
     bbox_polygon = box(*bbox)
     return bbox_polygon.intersects(trigger_zone)
 
+def bbox_polygon_intersection(trigger_zone, bbox):
+    '''
+    Check if bbox intersect with trigger_zone Polygon
+    Inputs
+        trigger_zone: shapely.Geometry.Polygon
+        bbox: tuple (x1,y1,x2,y2)
+    Outputs
+        Boolean
+    '''
+    bbox_polygon = box(*bbox)
+    return bbox_polygon.intersects(trigger_zone).area
+
 def bbox_polygon_iou(trigger_zone, bbox):
     '''
     Compute IoU between bbox & trigger_zone Polygon

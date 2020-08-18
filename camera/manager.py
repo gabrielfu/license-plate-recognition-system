@@ -2,7 +2,7 @@ import time
 import logging
 from shapely.geometry import Polygon, box
 from .camera import Camera, CameraType
-from utils.bbox import compute_iou, bbox_polygon_iou
+from utils.bbox import compute_iou, bbox_polygon_intersection
 
 class CameraManager:
     def __init__(self, config):
@@ -88,11 +88,6 @@ class CameraManager:
                 cur_time = time.time()
                 camera_dict['last_triggered_coords'] = triggered_coords
                 camera_dict['last_triggered_time'] = cur_time
-                # if this is the first time trigger
-                if last_triggered_coords is None:
-                    camera_dict['camera'].start_accumulate()
-                    logging.info(f'{cam_ip}: TRIGGERED: first time trigger')
-                    continue
                 # if the time difference between this car and last trigger car is large
                 if cur_time - last_triggered_time > self.new_car_time_patient:
                     camera_dict['camera'].start_accumulate()
@@ -109,19 +104,19 @@ class CameraManager:
 
     @staticmethod
     def find_triggered_car_coords(trigger_zone, car_locations):
-        """To find if there's any car's bbox touches trigger_zone. If multiple car do, return the max iou one.
+        """To find if there's any car's bbox touches trigger_zone. If multiple car do, return the max intersection one.
         args:
             tigger_zone (Polygon): the camera's trigger zone
             car_locations (list(dict('coords': tuple(int x1, int y1, int x2, int y2), 'confidence': float), ...))
         returns:
             triggered_coords (tuple(int x1, y1, x2, y2) / None): the coordinates of the car that has max iou with trigger zone 
         """
-        max_iou = 0
+        max_intersection = 0
         triggered_coords = None
         for _, car in enumerate(car_locations):
             car_coords = car['coords']
-            car_zone_iou = bbox_polygon_iou(trigger_zone, car_coords)
-            if car_zone_iou > max_iou:
-                max_iou = car_zone_iou
+            car_zone_intersec = bbox_polygon_intersection(trigger_zone, car_coords)
+            if car_zone_intersec > max_intersection:
+                max_intersection = car_zone_intersec
                 triggered_coords = car_coords
         return triggered_coords
