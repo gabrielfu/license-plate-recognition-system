@@ -44,7 +44,7 @@ plate_detector_trt:
   conf_thres: 0.5
   nms_thres: 0.4
   input_size: !!python/tuple [416, 416]
-  max_batch_size': 8
+  max_batch_size: 8
 
 segmentator:
   model_cfg: models/data/yolov3_char_seg_191219.cfg
@@ -63,5 +63,5 @@ char_recognizer:
   # inverse_char_dict_path: models.data.char_dict
   # inverse_char_dict: inverse_char_dict
   inverse_char_dict: models/data/char_dict.yaml
-  # 'conf_thres: 0.5
+  # conf_thres: 0.5
   img_size: 16
