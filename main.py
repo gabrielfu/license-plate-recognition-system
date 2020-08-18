@@ -146,7 +146,7 @@ if __name__ == '__main__':
                 # Update the trigger status of each batch cameras based on car locations
                 try:
                     all_car_locations = {
-                        ip: car for ip, car in zip(cam_ip[i:min(i+car_batch_size, len(new_frames))]), car_locations)
+                        ip: car for ip, car in zip(cam_ip[i:min(i+car_batch_size, len(new_frames))], car_locations)
                     }
                     camera_manager.update_camera_trigger_status(all_car_locations)
                 except:
