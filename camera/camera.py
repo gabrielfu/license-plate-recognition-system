@@ -36,6 +36,9 @@ class Camera:
         self.accum_frames = queue.Queue(maxsize=self.num_votes)
         self._is_started = False
         self._is_accumulating = False
+        
+    def __str__(self):
+        return f'Camera({self.cam_type}, {self.cam_ip})'
 
     @property
     def is_started(self):
