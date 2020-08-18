@@ -13,6 +13,7 @@ from logger import setup_logging
 
 def exit_app():
     ''' Shut down the whole application'''
+    logging.info('Shutting down application')
     sys.exit()
 
 def majority_vote(ocr_results):
@@ -81,7 +82,7 @@ if __name__ == '__main__':
             from models.car_locator import CarLocator
             car_locator = CarLocator(models_cfg['car_locator'])
     except:
-        logging.exception('Failed to initialize Car Locator!')
+        logging.fatal('Failed to initialize Car Locator!')
         exit_app()
 
     logging.info('Initializing LPR...')
@@ -89,26 +90,26 @@ if __name__ == '__main__':
         from models.lpr import LPR
         lpr = LPR(models_cfg)
     except:
-        logging.exception('Failed to initialize LPR!')
+        logging.fatal('Failed to initialize LPR!')
         exit_app()
 
 
     # Initialize cameras and start frame streaming
-    logging.info('Streaming cameras...')
+    logging.info('Starting cameras...')
     try:
         camera_manager = CameraManager(cameras_cfg)
         camera_manager.start_cameras_streaming()
     except:
-        logging.exception('Failed to stream camera!')
+        logging.fatal('Failed to start camera!')
         exit_app()
 
     # Initialize kafka sender and start output streaming
-    logging.info('Streaming Kafka...')
+    logging.info('Starting Kafka sender...')
     try:
         sender = KafkaSender(kafka_cfg)
         sender.start_kafka_streaming()
     except:
-        logging.exception('Failed to stream Kafka!')
+        logging.fatal('Failed to start Kafka sender!')
         exit_app()
     time.sleep(5)
 
@@ -134,22 +135,21 @@ if __name__ == '__main__':
 
             # Fixed batch predict car detection
             for i in range(0, len(new_frames), car_batch_size):
+                i_end = min(i+car_batch_size, len(new_frames))
                 try:
-                    car_locations = car_locator.predict(
-                        new_frames[i:min(i+car_batch_size, len(new_frames))],
-                        sort_by='conf')
+                    car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')
                 
                 except:
-                    logging.exception('Failed to predict car detection')
+                    logging.exception(f'{cam_ips[i:i_end]}: Failed to predict car detection')
             
                 # Update the trigger status of each batch cameras based on car locations
                 try:
                     all_car_locations = {
-                        ip: car for ip, car in zip(cam_ips[i:min(i+car_batch_size, len(cam_ips))], car_locations)
+                        ip: car for ip, car in zip(cam_ips[i:i_end], car_locations)
                     }
                     camera_manager.update_camera_trigger_status(all_car_locations)
                 except:
-                    logging.exception('Error when triggering cameras')
+                    logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
 
         #############
         # Else, Single img prediction
@@ -173,7 +173,7 @@ if __name__ == '__main__':
                 try:
                     camera_manager.update_camera_trigger_status(car_locations)
                 except:
-                    logging.exception('Error when triggering cameras')
+                    logging.exception(f'{ip}: Error when triggering cameras')
                     continue
 
 
@@ -221,9 +221,9 @@ if __name__ == '__main__':
         ###       Output with Kafka       ###
         #####################################
         if license_numbers:
-            logging.info('LPR result: {\n'+'\n'.join([repr(k)+':'+repr(v) for k,v in license_numbers.items()])+'\n}')     
+            logging.info('LPR RESULT: {\n'+'\n'.join([repr(k)+':'+repr(v) for k,v in license_numbers.items()])+'\n}')     
             try:
                 sender.send(license_numbers)
             except:
-                logging.exception(f'Error in sender')
+                logging.critical(f"Sender failed to send LPR results!")
 

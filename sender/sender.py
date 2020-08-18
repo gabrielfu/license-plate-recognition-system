@@ -59,7 +59,7 @@ class KafkaSender:
             date_time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
             for cam_ip, (license_num, conf) in msg.items():
                 if conf is None: # Recognition fail
-                    logging.warning(f'{cam_ip}: recognition failed')
+                    logging.info(f'{cam_ip}: recognition failed')
                     continue
                 output = {}
                 output['Camera ID'] = cam_ip
@@ -75,7 +75,8 @@ class KafkaSender:
         try:
             self.messages.put_nowait(license_numbers)
         except queue.Full:
-            logging.exception('Sender messages queue full!')
+            logging.error('Sender messages queue full!')
+            raise
 
     def stop(self):
         self._is_started = False
