@@ -47,6 +47,16 @@ class CameraManager:
                                'last_triggered_time': 0}
         return cameras
 
+    def get_all_fps(self):
+        """Get all fps of all cameras
+        return:
+            all_fps (dict('cam_ip': float, ...))
+        """
+        all_fps = {}
+        for cam_ip, camera_dict in self.cameras.items():
+            all_fps[cam_ip] = camera_dict['camera'].get_fps()
+        return all_fps
+
     def get_all_frames(self):
         """Get camera.new_frame and camera.accum_frames for all self.cameras.
         return:

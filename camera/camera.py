@@ -29,7 +29,10 @@ class Camera:
         self.cam_ip = cam_ip
         self.cam_type = cam_type
         self.num_votes = num_votes
-        self.fps = 0
+        self.fps = None
+        self.fps_update_freq = 50000
+        self.num_frames = 0
+        self.start_time = time.monotonic()
         self.cap = cv2.VideoCapture(self.cam_ip)
         self.new_frame = None
         self.lock = threading.Lock()
@@ -55,6 +58,22 @@ class Camera:
         """
         self.cap.set(propId, value)
 
+    def get_fps(self):
+        with self.lock:
+            fps = self.fps
+        return fps
+
+    def _update_fps(self):
+        cur_time = time.monotonic()
+        with self.lock:
+            self.num_frames += 1
+            self.fps = self.num_frames / (cur_time - self.start_time + 1e-16)
+
+        if self.num_frames % self.fps_update_freq == 0:
+            with self.lock:
+                self.num_frames = 0
+                self.start_time = time.monotonic()
+
     def _updating(self):
         """Camera updating process
         1. keep updating self.new_frame if self._is_started
@@ -66,6 +85,7 @@ class Camera:
                 self.new_frame = None
                 self.reconnecting()
                 continue
+            self._update_fps()
             if self.cam_type == CameraType.bot or self.cam_type == CameraType.entrance:
                 self._update_new_frame(frame)
             if self.cam_type == CameraType.top or self.cam_type == CameraType.entrance:
@@ -149,4 +169,5 @@ class Camera:
         self.thread.join()
 
     def _clear_accum_frames(self):
+        del self.accum_frames
         self.accum_frames = queue.Queue(maxsize=self.num_votes)
