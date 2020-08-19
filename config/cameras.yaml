@@ -12,3 +12,19 @@ cameras:
       - !!python/tuple [1050, 700]
       - !!python/tuple [565, 565]
       - !!python/tuple [360, 750]
+  camera2:
+    type: 'entrance'
+    ip: './assets/entrance_2.mp4'
+    trigger_zone:
+      - !!python/tuple [531, 983]
+      - !!python/tuple [1050, 700]
+      - !!python/tuple [565, 565]
+      - !!python/tuple [360, 750]
+  camera3:
+    type: 'entrance'
+    ip: './assets/entrance_3.mp4'
+    trigger_zone:
+      - !!python/tuple [531, 983]
+      - !!python/tuple [1050, 700]
+      - !!python/tuple [565, 565]
+      - !!python/tuple [360, 750]

@@ -6,6 +6,7 @@ import tensorrt as trt
 import pycuda.driver as cuda
 
 from utils.tensorrt import post_processing
+import time
 
 try:
     # Sometimes python2 does not understand FileNotFoundError
@@ -52,6 +53,7 @@ def allocate_buffers(engine):
 # This function is generalized for multiple inputs/outputs.
 # inputs and outputs are expected to be lists of HostDeviceMem objects.
 def do_inference(context, bindings, inputs, outputs, stream):
+#    start = time.time()
     # Transfer input data to the GPU.
     [cuda.memcpy_htod_async(inp.device, inp.host, stream) for inp in inputs]
     # Run inference.
@@ -61,6 +63,7 @@ def do_inference(context, bindings, inputs, outputs, stream):
     # Synchronize the stream
     stream.synchronize()
     # Return only the host outputs.
+#    print(f'do_inference time: {time.time()-start}')
     return [out.host for out in outputs]
 
 
@@ -83,9 +86,9 @@ class TrtYOLO(object):
 
     def _init_trt(self, engine_path):
         self.engine = self._get_engine(engine_path)
-#         self.buffers = allocate_buffers(self.engine)
-#         self.context = self.engine.create_execution_context()
-#         self.inputs, self.outputs, self.bindings, self.stream = self.buffers
+        self.buffers = allocate_buffers(self.engine)
+        self.context = self.engine.create_execution_context()
+        self.inputs, self.outputs, self.bindings, self.stream = self.buffers
 
     def _preprocess_img(self, img):
         resized = cv2.resize(img, self.input_size, interpolation=cv2.INTER_LINEAR)
@@ -95,8 +98,10 @@ class TrtYOLO(object):
         return img_in
 
     def _preprocess_img_lst(self, img_lst):
+#        start = time.time()
         imgs_array = np.array([self._preprocess_img(img) for img in img_lst])  # (b,c,h,w)
         imgs_array = np.ascontiguousarray(imgs_array)
+#        print(f'yolo_trt _preprocess_img_lst time {time.time() - start}')
         return imgs_array
 
     def detect(self, img_lst):
@@ -107,22 +112,22 @@ class TrtYOLO(object):
         outputs:
             - imgs_preds: list of list of preds (x1,y1,x2,y2,conf,cls_conf,cls)  [p.s. normalized coords]
         '''
-
+#        start = time.time()
         imgs_array = self._preprocess_img_lst(img_lst)
         
         
 #         self.inputs[0].host = imgs_array
         
-        with self.engine.create_execution_context() as context:
-            inputs, outputs, bindings, stream = allocate_buffers(self.engine)
-            inputs[0].host = imgs_array
-            trt_outputs = do_inference(context, bindings=bindings, inputs=inputs, outputs=outputs, stream=stream)
+#         with self.engine.create_execution_context() as context:
+#             inputs, outputs, bindings, stream = allocate_buffers(self.engine)
+        self.inputs[0].host = imgs_array
+        trt_outputs = do_inference(self.context, bindings=self.bindings, inputs=self.inputs, outputs=self.outputs, stream=self.stream)
             
 #         print(trt_outputs)
 
         trt_outputs[0] = trt_outputs[0].reshape(self.max_batch_size, -1, 1, 4)
         trt_outputs[1] = trt_outputs[1].reshape(self.max_batch_size, -1, self.n_classes)
-
+        
         imgs_preds = post_processing(imgs_array, self.conf, self.nms_conf, trt_outputs)
-
+#        print(f'yolo_trt detect time: {time.time() - start}')
         return imgs_preds

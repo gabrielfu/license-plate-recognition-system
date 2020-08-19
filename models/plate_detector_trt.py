@@ -1,5 +1,5 @@
 import numpy as np
-
+import time
 from .modules.yolo_trt import TrtYOLO
 from utils.utils import load_classes, get_correct_path
 from utils.bbox import diff_cls_nms, rescale_boxes
@@ -33,6 +33,7 @@ class PlateDetectorTRT():
                 None
             ]
         '''
+#        start = time.time()
         if not imgs_list: # Empty imgs list
             return []
 
@@ -52,5 +53,5 @@ class PlateDetectorTRT():
                     imgs_detections[i] = rescale_boxes(np.array(detections), self.input_size[0], img_shape)
 
         imgs_detections = imgs_detections[:i+1]
-
+#        print(f'plate_detector_trt predict time: {time.time() - start}')
         return imgs_detections
