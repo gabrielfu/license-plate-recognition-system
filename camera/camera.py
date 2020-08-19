@@ -16,6 +16,7 @@ class Camera:
                  cam_ip,
                  cam_type,
                  num_votes=8,
+                 cam_fps_sim=False
                  ):
         """
         Args:
@@ -29,10 +30,12 @@ class Camera:
         self.cam_ip = cam_ip
         self.cam_type = cam_type
         self.num_votes = num_votes
+        self.frame_min_interval = 1/(cam_fps_sim + 1e-16) if cam_fps_sim else 0
         self.fps = None
         self.fps_update_freq = 50000
         self.num_frames = 0
         self.start_time = time.monotonic()
+        self.last_update_time = time.monotonic()
         self.cap = cv2.VideoCapture(self.cam_ip)
         self.new_frame = None
         self.lock = threading.Lock()
@@ -63,8 +66,7 @@ class Camera:
             fps = self.fps
         return fps
 
-    def _update_fps(self):
-        cur_time = time.monotonic()
+    def _update_fps(self, cur_time):
         with self.lock:
             self.num_frames += 1
             self.fps = self.num_frames / (cur_time - self.start_time + 1e-16)
@@ -85,7 +87,12 @@ class Camera:
                 self.new_frame = None
                 self.reconnecting()
                 continue
-            self._update_fps()
+            cur_time = time.monotonic()
+            time_interval = cur_time - self.last_update_time
+            self.last_update_time = cur_time
+            if time_interval < self.frame_min_interval:
+                time.sleep(self.frame_min_interval - time_interval)
+            self._update_fps(cur_time)
             if self.cam_type == CameraType.bot or self.cam_type == CameraType.entrance:
                 self._update_new_frame(frame)
             if self.cam_type == CameraType.top or self.cam_type == CameraType.entrance:
