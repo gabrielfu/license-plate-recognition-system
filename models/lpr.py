@@ -7,7 +7,7 @@ class LPR():
         # Initialize the models
         for model, trt in use_trt:
             if model == 'plate_detector':
-                logging.info(f'Initializing plate_detector... (TensorRT={trt})') 
+                logging.info(f'Initializing Plate Detector... (TensorRT={trt})') 
                 if trt:
                     from .plate_detector_trt import PlateDetectorTRT
                     self.detector = PlateDetectorTRT(cfg['plate_detector_trt'])
@@ -15,14 +15,14 @@ class LPR():
                     from .plate_detector import PlateDetector
                     self.detector = PlateDetector(cfg['plate_detector'])
             elif model == 'segmentator':
-                logging.info(f'Initializing segmentator... (TensorRT={trt})') 
+                logging.info(f'Initializing Segmentator... (TensorRT={trt})') 
                 if trt:
                     raise NotImplementedError('Segmentator has no TRT model yet')
                 else:
                     from .segmentator import Segmentator
                     self.segmentator = Segmentator(cfg['segmentator'])
             elif model == 'char_recognizer':
-                logging.info(f'Initializing char_recognizer... (TensorRT={trt})') 
+                logging.info(f'Initializing Char Recognizer... (TensorRT={trt})') 
                 if trt:
                     raise NotImplementedError('CharRecognizer has no TRT model yet')
                 else:
