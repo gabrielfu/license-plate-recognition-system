@@ -2,6 +2,7 @@ import sys
 import os
 import time
 import logging
+import collections
 
 sys.path.insert(0, os.getcwd())
 
@@ -218,8 +219,8 @@ if __name__ == '__main__':
     #####################################
     ###          Start Loop           ###
     #####################################   
-    loop_count = 0
-    loop_time_ttl = 0.0
+    loop_count = collections.defaultdict(float)
+    loop_time_ttl = collections.defaultdict(float)
     while True:
         loop_start = time.time()
         # Get all the frames for prediction
@@ -236,13 +237,14 @@ if __name__ == '__main__':
         # Predict license numbers
         # For each camera (as a batch)
         license_numbers = {}
+        num_lpr_predict = 0
         for ip, frames in all_frames.items():
             try:
                 # Continue if no accum_frames
                 accum_frames = frames['accum_frames']
                 if accum_frames is None:
                     continue
-                
+                num_lpr_predict += 1
                 lpr_output = lpr.predict([f for f in accum_frames if f is not None]) # handle any None frame in accum_frames
                 plate_nums = []
                 # For each frame, find the plate with largest area
@@ -285,16 +287,25 @@ if __name__ == '__main__':
                 exit_app()
             except:
                 logging.critical("Sender failed to send LPR results!")
-                
-        loop_time_ttl += (time.time() - loop_start)
-        loop_count += 1
         
-        if loop_count >= print_every:
-            avg_time = float(loop_time_ttl) / (loop_count+1e-16)
-            if avg_time > 0.01: # if not all empty loops
-                all_fps = camera_manager.get_all_fps()
-                logging.info(f'{loop_count}-loop average time: {avg_time:.2f} s')
-                logging.info(f'Camera fps: {all_fps}')
-            loop_count = 0
-            loop_time_ttl = 0.0
+        loop_time = time.time() - loop_start
+        if loop_time < 0.01: # doesn't count since it's likely empty loop
+            continue
+        loop_time_ttl[num_lpr_predict] += loop_time
+        loop_count[num_lpr_predict] += 1
+        
+        if loop_count[0] >= print_every:
+            for num_lpr_predict in loop_count.keys():                
+                avg_time = loop_time_ttl[num_lpr_predict] / (loop_count[num_lpr_predict]+1e-16)
+                logging.info(f'{loop_count[num_lpr_predict]}-loop average time: {avg_time:.2f} s')
+            all_fps = camera_manager.get_all_fps()
+            logging.info(f'Camera fps: {all_fps}')
+            loop_count = collections.defaultdict(float)
+            loop_time_ttl = collections.defaultdict(float)
+
+
+
+
+
+
 
