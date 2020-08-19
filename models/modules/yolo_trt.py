@@ -101,7 +101,7 @@ class TrtYOLO(object):
 #        start = time.time()
         imgs_array = np.array([self._preprocess_img(img) for img in img_lst])  # (b,c,h,w)
         imgs_array = np.ascontiguousarray(imgs_array)
-#        print(f'yolo_trt _preprocess_img_lst time {time.time() - start}')
+#        print(f'yolo_trt _preprocess_img_lst [len{len(img_lst)}] time {time.time() - start}')
         return imgs_array
 
     def detect(self, img_lst):
@@ -114,20 +114,18 @@ class TrtYOLO(object):
         '''
 #        start = time.time()
         imgs_array = self._preprocess_img_lst(img_lst)
-        
-        
+
         self.inputs[0].host = imgs_array
         trt_outputs = do_inference(self.context, bindings=self.bindings, inputs=self.inputs, outputs=self.outputs, stream=self.stream)
-        
+
 #         with self.engine.create_execution_context() as context:
 #             inputs, outputs, bindings, stream = allocate_buffers(self.engine)
 #             inputs[0].host = imgs_array
 #             trt_outputs = do_inference(context, bindings=bindings, inputs=inputs, outputs=outputs, stream=stream)
-            
 
         trt_outputs[0] = trt_outputs[0].reshape(self.max_batch_size, -1, 1, 4)
         trt_outputs[1] = trt_outputs[1].reshape(self.max_batch_size, -1, self.n_classes)
-        
+
         imgs_preds = post_processing(imgs_array, self.conf, self.nms_conf, trt_outputs)
-#        print(f'yolo_trt detect time: {time.time() - start}')
+#        print(f'yolo_trt detect time [len{len(img_lst)}]: {time.time() - start}')
         return imgs_preds
