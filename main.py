@@ -77,7 +77,67 @@ def init_car_locator(use_trt):
         logging.critical('Failed to initialize Car Locator!')
         exit_app()
     return car_locator, car_batch_size
-            
+
+def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
+    ''' Wrapper function to do fixed batch car location detection '''
+    # Extract new frame for each camera
+    new_frames = []
+    cam_ips = []
+    for ip, frames in all_frames.items():
+        frame = frames['new_frame']
+        if frame is not None:
+            new_frames.append(frame)
+            cam_ips.append(ip)
+    # Fixed batch predict car detection
+    for i in range(0, len(new_frames), car_batch_size):
+        i_end = min(i+car_batch_size, len(new_frames))
+        try:
+            car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')        
+        except KeyboardInterrupt:
+            logging.info('Keyboard Interrupt')
+            exit_app()
+        except:
+            logging.exception(f'{cam_ips[i:i_end]}: Failed to predict car detection')
+        # Update the trigger status of each batch cameras based on car locations
+        try:
+            all_car_locations = {
+                ip: car for ip, car in zip(cam_ips[i:i_end], car_locations)
+            }
+            camera_manager.update_camera_trigger_status(all_car_locations)
+        except KeyboardInterrupt:
+            logging.info('Keyboard Interrupt')
+            exit_app()
+        except:
+            logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
+
+def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
+    ''' Wrapper function to do single img car location detection '''
+    # all_car_locations = {}
+    for ip, frames in all_frames.items():
+        # Extract new frame for each camera
+        frame = frames['new_frame']
+        if frame is None:
+            continue
+        # Single img prediction
+        try:
+            car = car_locator.predict([frame], sort_by='conf')[0]
+            car_locations = {ip: car}
+        except KeyboardInterrupt:
+            logging.info('Keyboard Interrupt')
+            exit_app()
+        except:
+            logging.exception(f'{ip}: Failed to predict car detection')
+            continue
+
+        # Update the trigger status of all cameras based on car locations
+        try:
+            camera_manager.update_camera_trigger_status(car_locations)
+        except KeyboardInterrupt:
+            logging.info('Keyboard Interrupt')
+            exit_app()
+        except:
+            logging.exception(f'{ip}: Error when triggering cameras')
+            continue
 
 if __name__ == '__main__':
 
@@ -92,9 +152,7 @@ if __name__ == '__main__':
     kafka_cfg = read_yaml('config/kafka.yaml')
     
     # Setup logging handlers & initialize logger
-    log_dir = logger_cfg['log_dir']
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    os.makedirs(logger_cfg['log_dir'], exist_ok=True)
     setup_logging(logger_cfg)
     logging.info('-------------------------------------------------------')
     logging.info('Starting Application...')
@@ -121,12 +179,21 @@ if __name__ == '__main__':
     else: # need to initialize Car Locator first
         car_locator, car_batch_size = init_car_locator(use_trt)
         lpr = init_LPR(use_trt)
+    
+    # Create wrapper function to handle config car locator batch size, so that it's not checked in every loop
+    if car_batch_size > 1:
+        car_locator_wrapper = fixed_batch_car_locator
+    else:
+        car_locator_wrapper = single_img_car_locator
         
     # Initialize cameras and start frame streaming
     logging.info('Starting cameras...')
     try:
         camera_manager = CameraManager(cameras_cfg)
         camera_manager.start_cameras_streaming()
+    except KeyboardInterrupt:
+        logging.info('Keyboard Interrupt')
+        exit_app()
     except:
         logging.critical('Failed to start camera!')
         exit_app()
@@ -136,6 +203,9 @@ if __name__ == '__main__':
     try:
         sender = KafkaSender(kafka_cfg)
         sender.start_kafka_streaming()
+    except KeyboardInterrupt:
+        logging.info('Keyboard Interrupt')
+        exit_app()
     except:
         logging.critical('Failed to start Kafka sender!')
         exit_app()
@@ -157,63 +227,8 @@ if __name__ == '__main__':
 
         #####################################
         ###         Car detection         ###
-        #####################################        
-        #----------------------------------
-        # If Fixed batch prediction
-        #----------------------------------
-        if car_batch_size > 1:
-            # Extract new frame for each camera
-            new_frames = []
-            cam_ips = []
-            for ip, frames in all_frames.items():
-                frame = frames['new_frame']
-                if frame is not None:
-                    new_frames.append(frame)
-                    cam_ips.append(ip)
-
-            # Fixed batch predict car detection
-            for i in range(0, len(new_frames), car_batch_size):
-                i_end = min(i+car_batch_size, len(new_frames))
-                try:
-                    car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')
-                
-                except:
-                    logging.exception(f'{cam_ips[i:i_end]}: Failed to predict car detection')
-            
-                # Update the trigger status of each batch cameras based on car locations
-                try:
-                    all_car_locations = {
-                        ip: car for ip, car in zip(cam_ips[i:i_end], car_locations)
-                    }
-                    camera_manager.update_camera_trigger_status(all_car_locations)
-                except:
-                    logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
-
-        #----------------------------------
-        # Else, Single img prediction
-        #----------------------------------
-        else:
-            # all_car_locations = {}
-            for i, (ip, frames) in enumerate(all_frames.items()):
-                # Extract new frame for each camera
-                frame = frames['new_frame']
-                if frame is None:
-                    continue
-                # Single img prediction
-                try:
-                    car = car_locator.predict([frame], sort_by='conf')[0]
-                    car_locations = {ip: car}
-                except:
-                    logging.exception(f'{ip}: Failed to predict car detection')
-                    continue
-
-                # Update the trigger status of all cameras based on car locations
-                try:
-                    camera_manager.update_camera_trigger_status(car_locations)
-                except:
-                    logging.exception(f'{ip}: Error when triggering cameras')
-                    continue
-
+        #####################################      
+        car_locator_wrapper(all_frames, car_locator, car_batch_size, camera_manager)  
 
         #####################################
         ###      License Recognition      ###
@@ -245,6 +260,9 @@ if __name__ == '__main__':
                         plate_nums.append((result['numbers'], result['confidence']))
                 # Perform majority vote & put into dict
                 license_numbers[ip] = majority_vote(plate_nums)
+            except KeyboardInterrupt:
+                logging.info('Keyboard Interrupt')
+                exit_app()
             except:
                 logging.exception(f'{ip}: Error in lpr prediction')
             
@@ -262,6 +280,9 @@ if __name__ == '__main__':
             logging.info('LPR RESULT: {\n'+'\n'.join([repr(k)+':'+repr(v) for k,v in license_numbers.items()])+'\n}')     
             try:
                 sender.send(license_numbers)
+            except KeyboardInterrupt:
+                logging.info('Keyboard Interrupt')
+                exit_app()
             except:
                 logging.critical("Sender failed to send LPR results!")
                 
