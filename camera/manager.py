@@ -32,6 +32,7 @@ class CameraManager:
         for _, v in cameras_dict.items():
             cam_ip = v['ip']
             cam_type = v['type']
+            cam_fps_sim = v['fps_simulation']
             if cam_type == 'entrance':
                 cam_type = CameraType.entrance
             # elif cam_type == 'top':
@@ -41,7 +42,7 @@ class CameraManager:
             else:
                 logging.error('Unimplemented cam_type: {}'.format(cam_type))
             trigger_zone = v['trigger_zone']
-            cameras[cam_ip] = {'camera': Camera(cam_ip, cam_type, self.num_votes),
+            cameras[cam_ip] = {'camera': Camera(cam_ip, cam_type, self.num_votes, cam_fps_sim),
                                'trigger_zone': Polygon(trigger_zone),
                                'last_triggered_coords': None,
                                'last_triggered_time': 0}

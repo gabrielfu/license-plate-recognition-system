@@ -3,10 +3,12 @@ properties:
   new_car_time_patient: 5.0
   new_car_iou_threshold: 0.35
 # trigger_zone is a list of tuple of [x, y] points in anti-clockwise direction
+# fps_simulation should be False if it's streaming ip
 cameras:
   camera1:
     type: 'entrance'
     ip: './assets/entrance_1.mp4'
+    fps_simulation: 30
     trigger_zone:
       - !!python/tuple [531, 983]
       - !!python/tuple [1050, 700]
@@ -15,6 +17,7 @@ cameras:
   camera2:
     type: 'entrance'
     ip: './assets/entrance_2.mp4'
+    fps_simulation: 30
     trigger_zone:
       - !!python/tuple [531, 983]
       - !!python/tuple [1050, 700]
@@ -23,6 +26,7 @@ cameras:
   camera3:
     type: 'entrance'
     ip: './assets/entrance_3.mp4'
+    fps_simulation: 30
     trigger_zone:
       - !!python/tuple [531, 983]
       - !!python/tuple [1050, 700]
