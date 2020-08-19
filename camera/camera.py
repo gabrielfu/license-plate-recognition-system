@@ -36,7 +36,7 @@ class Camera:
         self.cap = cv2.VideoCapture(self.cam_ip)
         self.new_frame = None
         self.lock = threading.Lock()
-        self.accum_frames = queue.Queue(maxsize=self.num_votes)
+        self.accum_frames = []
         self._is_started = False
         self._is_accumulating = False
         
@@ -99,12 +99,8 @@ class Camera:
     def _accumulate(self, frame):
         """Accumulate if self._is_accumulating is True. When self.accum_frames is full, set self._is_accumulating to be False"""
         if self._is_accumulating:
-            try:
-                self.accum_frames.put_nowait(frame)
-            except queue.Full:
-                logging.exception(f'{self.cam_ip}: try to put frame when accum_frames is full')
-
-            if self.accum_frames.full():
+            self.accum_frames.append(frame)
+            if len(self.accum_frames) >= self.num_votes:
                 self._is_accumulating = False
 
     def start(self):
@@ -122,7 +118,7 @@ class Camera:
         """To start putting frames into self.accum_frames. Please call this function only after calling start()"""
         if self._is_accumulating:
             logging.warning(f'{self.cam_ip}: started accumulating while previous accumulating process un-finished')
-        if not self.accum_frames.empty():
+        if len(self.accum_frames) != 0:
             logging.warning(f'{self.cam_ip}: started accumulating while previous accumulated frames un-used')
             self._clear_accum_frames()
         self._is_accumulating = True
@@ -133,14 +129,12 @@ class Camera:
             accum_frames (None/np.array): None if self.accum_frames not full. np.array of shape self.num_votes*h*w*c otherwise
         """
         accum_frames = None
-        if self.accum_frames.full():
-            accum_frames = []
-            while not self.accum_frames.empty():
-                try:
-                    accum_frames.append(self.accum_frames.get_nowait())
-                except queue.Empty:
-                    logging.exception(f'{self.cam_ip}: try to get frame when accum_frames is empty')
+        if len(self.accum_frames) >= self.num_votes:
+            if len(self.accum_frames) > self.num_votes:
+                logging.exception(f'{self.cam_ip}: accum_frames more than {self.num_votes}!')
+            accum_frames = self.accum_frames[:self.num_votes]
             accum_frames = np.array(accum_frames)
+        self._clear_accum_frames()
         return accum_frames
 
     def get_new_frame(self):
@@ -174,4 +168,4 @@ class Camera:
 
     def _clear_accum_frames(self):
         del self.accum_frames
-        self.accum_frames = queue.Queue(maxsize=self.num_votes)
+        self.accum_frames = []
