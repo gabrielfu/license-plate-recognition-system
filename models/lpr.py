@@ -1,18 +1,35 @@
 import logging
-from .segmentator import Segmentator
-from .char_recognizer import CharRecognizer
+from collections import OrderedDict
 
 class LPR():
-    def __init__(self, cfg, use_trt=False):
-        self.segmentator = Segmentator(cfg['segmentator'])
-        self.recognizer = CharRecognizer(cfg['char_recognizer'])
-        if use_trt:
-            from .plate_detector_trt import PlateDetectorTRT
-            self.detector = PlateDetectorTRT(cfg['plate_detector_trt'])
-        else:
-            from .plate_detector import PlateDetector
-            self.detector = PlateDetector(cfg['plate_detector'])
-
+    def __init__(self, cfg, use_trt={}):
+        # Sort the dict by values so that torch models get initialized first
+        use_trt = OrderedDict(sorted(use_trt.items(), key=lambda x: x[1], reverse=False))
+        # Initialize the models
+        for model, trt in use_trt:
+            if model == 'plate_detector':
+                logging.info(f'Initializing plate_detector... (TensorRT={trt})') 
+                if trt:
+                    from .plate_detector_trt import PlateDetectorTRT
+                    self.detector = PlateDetectorTRT(cfg['plate_detector_trt'])
+                else:
+                    from .plate_detector import PlateDetector
+                    self.detector = PlateDetector(cfg['plate_detector'])
+            if model == 'segmentator':
+                logging.info(f'Initializing segmentator... (TensorRT={trt})') 
+                if trt:
+                    raise NotImplementedError('Segmentator has no TRT model yet')
+                else:
+                    from .segmentator import Segmentator
+                    self.segmentator = Segmentator(cfg['segmentator'])
+            if model == 'char_recognizer':
+                logging.info(f'Initializing char_recognizer... (TensorRT={trt})') 
+                if trt:
+                    raise NotImplementedError('CharRecognizer has no TRT model yet')
+                else:
+                    from .char_recognizer import CharRecognizer
+                    self.recognizer = CharRecognizer(cfg['char_recognizer'])
+    
         # How much to pad in detected plates before segmenting (0~1)
         self.pad_x = cfg['lpr']['pad_x']
         self.pad_y = cfg['lpr']['pad_y']

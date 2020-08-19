@@ -51,6 +51,34 @@ def majority_vote(ocr_results):
     lic_num, conf = max(major_candidates_conf.items(), key=lambda x: x[1])
     return lic_num, conf
 
+def init_LPR(use_trt):
+    ''' Import & initialize LPR '''
+    try:
+        from models.lpr import LPR
+        lpr = LPR(models_cfg, use_trt)
+    except:
+        logging.critical('Failed to initialize LPR!')
+        exit_app()
+    return lpr
+
+def init_car_locator(use_trt):
+    ''' Import & initialize Car Locator '''
+    logging.info(f'Initializing Car Locator... (TensorRT={use_trt["car_locator"]})')
+    try:
+        if use_trt["car_locator"]:
+            from models.car_locator_trt import CarLocatorTRT
+            car_locator = CarLocatorTRT(models_cfg['car_locator_trt'])
+            car_batch_size = int(models_cfg['car_locator_trt']['max_batch_size'])
+        else:
+            from models.car_locator import CarLocator
+            car_locator = CarLocator(models_cfg['car_locator'])
+            car_batch_size = int(models_cfg['car_locator']['batch_size'])
+    except:
+        logging.critical('Failed to initialize Car Locator!')
+        exit_app()
+    return car_locator, car_batch_size
+            
+
 if __name__ == '__main__':
 
     #####################################
@@ -75,39 +103,24 @@ if __name__ == '__main__':
     print_every = int(app_cfg['app']['print_time_every_loops'])
     
     # Check if use trt or not
-    use_trt = app_cfg['car_locator']['trt']
-    if use_trt:
+    # use_trt is sorted by values so that False's are in the front
+    # use_trt = OrderedDict(sorted(app_cfg['use_trt'].items(), key=lambda x: x[1], reverse=False))
+    use_trt = app_cfg['use_trt']
+    if use_trt['plate_detector']:
         if models_cfg['plate_detector_trt']['max_batch_size'] < cameras_cfg['properties']['num_votes']:
             logging.critical(f"Number of majority votes ({cameras_cfg['properties']['num_votes']}) is smaller than maximum batch size of PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})")
             exit_app()
             
     '''
     Needs to initialize all torch models before initializing trt models
-    Otherwise, context issues / models will predict None all the time
+    Otherwise, cuda context issues, or models will predict None all the time
     '''
-    # Import & initialize LPR
-    logging.info(f'Initializing LPR... (TensorRT={use_trt})')
-    try:
-        from models.lpr import LPR
-        lpr = LPR(models_cfg, use_trt)
-    except:
-        logging.critical('Failed to initialize LPR!')
-        exit_app()
-
-    # Import & initialize Car Locator
-    logging.info(f'Initializing Car Locator... (TensorRT={use_trt})')
-    try:
-        if use_trt:
-            from models.car_locator_trt import CarLocatorTRT
-            car_locator = CarLocatorTRT(models_cfg['car_locator_trt'])
-            car_batch_size = int(models_cfg['car_locator_trt']['max_batch_size'])
-        else:
-            from models.car_locator import CarLocator
-            car_locator = CarLocator(models_cfg['car_locator'])
-            car_batch_size = int(models_cfg['car_locator']['batch_size'])
-    except:
-        logging.critical('Failed to initialize Car Locator!')
-        exit_app()
+    if use_trt['car_locator']: # need to initialize LPR first
+        lpr = init_LPR(use_trt)
+        car_locator, car_batch_size = init_car_locator(use_trt)
+    else: # need to initialize Car Locator first
+        car_locator, car_batch_size = init_car_locator(use_trt)
+        lpr = init_LPR(use_trt)
         
     # Initialize cameras and start frame streaming
     logging.info('Starting cameras...')

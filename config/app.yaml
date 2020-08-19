@@ -2,5 +2,8 @@ app:
   sleep_after_init: 3.0
   print_time_every_loops: 500
 
-car_locator:
-  trt: True
+use_trt:
+  car_locator: True
+  plate_detector: True
+  segmentator: False
+  char_recognizer: False
