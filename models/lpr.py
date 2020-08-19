@@ -1,29 +1,28 @@
 import logging
-from collections import OrderedDict
 
 class LPR():
     def __init__(self, cfg, use_trt={}):
         # Sort the dict by values so that torch models get initialized first
-        use_trt = OrderedDict(sorted(use_trt.items(), key=lambda x: x[1], reverse=False))
+        use_trt = tuple(sorted(use_trt.items(), key=lambda x: x[1], reverse=False))
         # Initialize the models
         for model, trt in use_trt:
             if model == 'plate_detector':
-                logging.info(f'Initializing plate_detector... (TensorRT={trt})') 
+                logging.info(f'Initializing Plate Detector... (TensorRT={trt})') 
                 if trt:
                     from .plate_detector_trt import PlateDetectorTRT
                     self.detector = PlateDetectorTRT(cfg['plate_detector_trt'])
                 else:
                     from .plate_detector import PlateDetector
                     self.detector = PlateDetector(cfg['plate_detector'])
-            if model == 'segmentator':
-                logging.info(f'Initializing segmentator... (TensorRT={trt})') 
+            elif model == 'segmentator':
+                logging.info(f'Initializing Segmentator... (TensorRT={trt})') 
                 if trt:
                     raise NotImplementedError('Segmentator has no TRT model yet')
                 else:
                     from .segmentator import Segmentator
                     self.segmentator = Segmentator(cfg['segmentator'])
-            if model == 'char_recognizer':
-                logging.info(f'Initializing char_recognizer... (TensorRT={trt})') 
+            elif model == 'char_recognizer':
+                logging.info(f'Initializing Char Recognizer... (TensorRT={trt})') 
                 if trt:
                     raise NotImplementedError('CharRecognizer has no TRT model yet')
                 else:
