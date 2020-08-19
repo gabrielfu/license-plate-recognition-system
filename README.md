@@ -10,5 +10,5 @@ Char recognition (torch)
 -----------------------------
 3 videos input
 => camera fps: 55
-=> no-car loop: ~0.15s
-=> 1 trigger loop: ~1.03s-1.4s
+=> no lpr prediction loop: ~0.15s
+=> 1 lpr prediction loop: ~1.03s-1.4s
