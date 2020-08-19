@@ -116,14 +116,14 @@ class TrtYOLO(object):
         imgs_array = self._preprocess_img_lst(img_lst)
         
         
-#         self.inputs[0].host = imgs_array
+        self.inputs[0].host = imgs_array
+        trt_outputs = do_inference(self.context, bindings=self.bindings, inputs=self.inputs, outputs=self.outputs, stream=self.stream)
         
 #         with self.engine.create_execution_context() as context:
 #             inputs, outputs, bindings, stream = allocate_buffers(self.engine)
-        self.inputs[0].host = imgs_array
-        trt_outputs = do_inference(self.context, bindings=self.bindings, inputs=self.inputs, outputs=self.outputs, stream=self.stream)
+#             inputs[0].host = imgs_array
+#             trt_outputs = do_inference(context, bindings=bindings, inputs=inputs, outputs=outputs, stream=stream)
             
-#         print(trt_outputs)
 
         trt_outputs[0] = trt_outputs[0].reshape(self.max_batch_size, -1, 1, 4)
         trt_outputs[1] = trt_outputs[1].reshape(self.max_batch_size, -1, self.n_classes)
