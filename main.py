@@ -279,7 +279,7 @@ if __name__ == '__main__':
         ###       Output with Kafka       ###
         #####################################
         if license_numbers:
-            logging.info('LPR RESULT: {\n'+'\n'.join([repr(k)+':'+repr(v) for k,v in license_numbers.items()])+'\n}')     
+            logging.info(f'LPR RESULT: {license_numbers}')     
             try:
                 sender.send(license_numbers)
             except KeyboardInterrupt:
