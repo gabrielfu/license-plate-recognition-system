@@ -1,10 +1,9 @@
 import logging
-from collections import OrderedDict
 
 class LPR():
     def __init__(self, cfg, use_trt={}):
         # Sort the dict by values so that torch models get initialized first
-        use_trt = OrderedDict(sorted(use_trt.items(), key=lambda x: x[1], reverse=False))
+        use_trt = tuple(sorted(use_trt.items(), key=lambda x: x[1], reverse=False))
         # Initialize the models
         for model, trt in use_trt:
             if model == 'plate_detector':
