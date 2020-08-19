@@ -91,10 +91,9 @@ class TrtYOLO(object):
         self.inputs, self.outputs, self.bindings, self.stream = self.buffers
 
     def _preprocess_img(self, img):
+        # Resize -> BGR2RGB -> transpose -> float32 -> divide by 255
         resized = cv2.resize(img, self.input_size, interpolation=cv2.INTER_LINEAR)
-        img_in = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-        img_in = np.transpose(img_in, (2, 0, 1)).astype(np.float32)
-        img_in /= 255.0
+        img_in np.transpose(resized[..., ::-1], (2, 0, 1)).astype(np.float32) / 255.0
         return img_in
 
     def _preprocess_img_lst(self, img_lst):
