@@ -293,11 +293,11 @@ if __name__ == '__main__':
             continue
         loop_time_ttl[num_lpr_predict] += loop_time
         loop_count[num_lpr_predict] += 1
-        
         if loop_count[0] >= print_every:
-            for num_lpr_predict in loop_count.keys():                
+            logging.info('***************Speed evaluation******************')
+            for num_lpr_predict in loop_count.keys():
                 avg_time = loop_time_ttl[num_lpr_predict] / (loop_count[num_lpr_predict]+1e-16)
-                logging.info(f'{loop_count[num_lpr_predict]}-loop average time: {avg_time:.2f} s')
+                logging.info(f'[num_lpr_prediction in loop={num_lpr_predict}]{loop_count[num_lpr_predict]}-loop average time: {avg_time:.2f} s')
             all_fps = camera_manager.get_all_fps()
             logging.info(f'Camera fps: {all_fps}')
             loop_count = collections.defaultdict(float)
