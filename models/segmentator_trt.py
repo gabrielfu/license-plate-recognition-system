@@ -70,7 +70,7 @@ class SegmentatorTRT():
             ]
         '''
         if not img_lst: # Empty imgs list
-            return []
+            return [], []
 
         imgs_detections = self.model.detect(img_lst)
 
