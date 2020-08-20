@@ -25,6 +25,7 @@ car_locator_trt:
 lpr:
   pad_x: 0.1
   pad_y: 0.1
+  contrast: 3.5
 
 plate_detector:
   model_cfg: models/data/yolov3_plate_191204.cfg

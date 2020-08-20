@@ -81,3 +81,26 @@ def prepare_raw_imgs(imgs_list, mode, img_size):
         imgs = [to_tensor(img) for img in imgs]
 
     return torch.stack(imgs), imgs_shapes
+
+def clahe(img, clipLimit=3.5):
+    '''
+    Increases the contrast of an image by CLAHE (Contrast Limited Adaptive Histogram Equalization)
+    https://en.wikipedia.org/wiki/Adaptive_histogram_equalization#Contrast_Limited_AHE
+    
+    Operates on LAB color channels
+    Note that BGR2LAB and (BGR2RGB + RGB2LAB) give different values even in the L-channel
+    Only tested performance for BGR2LAB
+    
+    clipLimit:
+        Threshold for contrast limiting (3.5 works fine for LRC plates trt seg)
+    '''
+    # Converting image to LAB Color model
+    lab= cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    # Applying CLAHE to L-channel
+    clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=(8,8))
+    cl = clahe.apply(l)
+    # Converting image from LAB Color model to RGB model
+    limg = cv2.merge((cl,a,b))
+    final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+    return final
