@@ -5,5 +5,5 @@ app:
 use_trt:
   car_locator: True
   plate_detector: True
-  segmentator: False
+  segmentator: True
   char_recognizer: False

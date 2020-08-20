@@ -58,6 +58,16 @@ segmentator:
   char_line_threshold: 0.5
   pred_mode: cv2
 
+segmentator_trt:
+  model_path: models/data/yolov4_seg-8_320_fp16.engine
+  class_path: models/data/seg_classes.names
+  n_classes: 1
+  conf_thres: 0.5
+  nms_thres: 0.4
+  input_size: !!python/tuple [320, 320] # (h, w)
+  max_batch_size: 8
+  char_line_threshold: 0.5
+
 char_recognizer:
   weights_path: models/data/char_recog_9687.pth
   # inverse_char_dict_path: models.data.char_dict

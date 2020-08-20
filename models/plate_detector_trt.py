@@ -2,7 +2,7 @@ import numpy as np
 import time
 from .modules.yolo_trt import TrtYOLO
 from utils.utils import load_classes, get_correct_path
-from utils.bbox import diff_cls_nms, rescale_boxes
+from utils.bbox import rescale_boxes
 
 class PlateDetectorTRT():
     def __init__(self, cfg):

@@ -1,38 +1,21 @@
-import torch
-import cv2
-
-from .modules.darknet import Darknet
-from utils.image_preprocess import to_tensor, prepare_raw_imgs
+import numpy as np
+import time
+from .modules.yolo_trt import TrtYOLO
 from utils.utils import load_classes, get_correct_path
-from utils.bbox import non_max_suppression, rescale_boxes_with_pad
+from utils.bbox import rescale_boxes
 
-class Segmentator():
+class SegmentatorTRT():
     def __init__(self, cfg):
-        # Yolov3 stuff
-        class_path = get_correct_path(cfg['class_path'])
-        weights_path = get_correct_path(cfg['weights_path'])
-        model_cfg_path = get_correct_path(cfg['model_cfg'])
-        self.img_size = cfg['img_size']
-        self.n_cpu = cfg['n_cpu']
+        self.input_size = cfg['input_size'] # (h,w)
+        self.model_path = cfg['model_path']
         self.conf_thres = cfg['conf_thres']
         self.nms_thres = cfg['nms_thres']
-        self.classes = load_classes(class_path)
-        self.pred_mode = cfg['pred_mode']
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        # Set up model
-        self.model = Darknet(model_cfg_path, img_size=cfg['img_size']).to(self.device)
-        if cfg['weights_path'].endswith(".weights"):
-            # Load darknet weights
-            self.model.load_darknet_weights(weights_path)
-        else:
-            # Load checkpoint weights
-            self.model.load_state_dict(torch.load(weights_path, map_location=self.device))
-        self.model.eval()  # Set in evaluation mode
-
-        # define line threshold
+        self.n_classes = cfg['n_classes']
+        self.max_batch_size = cfg['max_batch_size']
+        self.model = TrtYOLO(self.model_path, self.input_size, self.n_classes, self.conf_thres, self.nms_thres, self.max_batch_size)
+        self.classes = load_classes(get_correct_path(cfg['class_path']))
         self.char_line_threshold = cfg['char_line_threshold']
-
+        
     def predict(self, plates_list):
         '''
         Inputs
@@ -58,8 +41,8 @@ class Segmentator():
                 continue
             boxes_list[i] = self.sort_boxes_single(boxes, boxes_centres)
         return boxes_list
-
-    def get_rois(self, img_lst):
+    
+    def get_rois(self, img_lst, sort_by='conf'):
         '''
         Inputs
             img_lst: list of np.array(h,w,c)
@@ -87,26 +70,27 @@ class Segmentator():
                 None
             ]
         '''
-
-        # Image preprocessing
         if not img_lst: # Empty imgs list
-            return [], []
+            return []
 
-        input_imgs, imgs_shapes = prepare_raw_imgs(img_lst, self.pred_mode, self.img_size)
-        input_imgs = input_imgs.to(self.device)
+        imgs_detections = self.model.detect(img_lst)
 
-        # Yolo prediction
-        with torch.no_grad():
-            img_detections = self.model(input_imgs)
-            img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
+        for i, (detections, img) in enumerate(zip(imgs_detections, img_lst)):
+            img_shape = img.shape[:2]
 
-        # Rescale boxes to original image
-        for i, (detection, img_shape) in enumerate(zip(img_detections, imgs_shapes)):
-            if detection is not None:
-                img_detections[i] = rescale_boxes_with_pad(detection, self.img_size, img_shape).numpy()
-        
-        # Post processing
-        boxes_list = [box.astype('int')[:, :4] if box is not None else box for box in img_detections]
+            if detections is not None:
+
+                # Rescale boxes to original image
+                if len(detections) == 0: # no plates exist
+                    imgs_detections[i] = np.array(detections)
+                else:
+                    if sort_by == 'conf':
+                        detections = sorted(detections, key=lambda x: x[4], reverse=True)
+                    imgs_detections[i] = rescale_boxes(np.array(detections), self.input_size[0], img_shape)
+
+        imgs_detections = imgs_detections[:i+1]
+
+        boxes_list = [box.astype('int')[:, :4] if box is not None else box for box in imgs_detections]
         for i, boxes in enumerate(boxes_list): # 3D array of each char coords in each imgs
             if boxes is None:
                 continue
@@ -139,8 +123,9 @@ class Segmentator():
             for box in boxes:
                 box_centres.append(((box[0]+box[2])//2, (box[1]+box[3])//2)) #x, y
             boxes_centres_list.append(box_centres)
+            
         return boxes_list, boxes_centres_list
-
+    
     def sort_boxes_single(self, boxes, boxes_centres):
         if boxes == []:
             return []
@@ -184,3 +169,4 @@ class Segmentator():
         sorted_second_line = [row[0] for row in second_line]
 
         return sorted_first_line+sorted_second_line
+
