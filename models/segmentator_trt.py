@@ -37,8 +37,6 @@ class SegmentatorTRT():
         '''
         boxes_list, boxes_centres_list = self.get_rois(plates_list)
         for i, (boxes, boxes_centres) in enumerate(zip(boxes_list, boxes_centres_list)):
-            if boxes is None:
-                continue
             boxes_list[i] = self.sort_boxes_single(boxes, boxes_centres)
         return boxes_list
     
@@ -90,7 +88,7 @@ class SegmentatorTRT():
 
         imgs_detections = imgs_detections[:i+1]
 
-        boxes_list = [box.astype('int')[:, :4] if box is not None else box for box in imgs_detections]
+        boxes_list = [box.astype('int')[:, :4] if len(box) != 0 else box for box in imgs_detections]
         for i, boxes in enumerate(boxes_list): # 3D array of each char coords in each imgs
             if boxes is None:
                 continue
@@ -116,19 +114,19 @@ class SegmentatorTRT():
 
         boxes_centres_list = [] # 2D array of each center point coords of each char
         for boxes in boxes_list:
-            if boxes is None:
+            if len(boxes) == 0:
                 boxes_centres_list.append(None)
                 continue
             box_centres = []
             for box in boxes:
                 box_centres.append(((box[0]+box[2])//2, (box[1]+box[3])//2)) #x, y
             boxes_centres_list.append(box_centres)
-            
+
         return boxes_list, boxes_centres_list
     
     def sort_boxes_single(self, boxes, boxes_centres):
-        if boxes == []:
-            return []
+        if len(boxes) == 0:
+            return boxes
 
         def avg_rois_height(boxes):
             avg_h = 0
@@ -169,4 +167,3 @@ class SegmentatorTRT():
         sorted_second_line = [row[0] for row in second_line]
 
         return sorted_first_line+sorted_second_line
-
