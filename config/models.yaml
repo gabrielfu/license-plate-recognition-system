@@ -25,7 +25,6 @@ car_locator_trt:
 lpr:
   pad_x: 0.1
   pad_y: 0.1
-  contrast: 3.5
 
 plate_detector:
   model_cfg: models/data/yolov3_plate_191204.cfg
@@ -68,6 +67,7 @@ segmentator_trt:
   input_size: !!python/tuple [320, 320] # (h, w)
   max_batch_size: 8
   char_line_threshold: 0.5
+  contrast: 3.5 # 0 to not add contrast
 
 char_recognizer:
   weights_path: models/data/char_recog_9687.pth

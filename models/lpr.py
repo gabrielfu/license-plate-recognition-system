@@ -1,5 +1,4 @@
 import logging
-from utils.image_preprocess import clahe
 
 class LPR():
     def __init__(self, cfg, use_trt={}):
@@ -34,7 +33,6 @@ class LPR():
         # How much to pad in detected plates before segmenting (0~1)
         self.pad_x = cfg['lpr']['pad_x']
         self.pad_y = cfg['lpr']['pad_y']
-        self.contrast = cfg['lpr']['contrast']
 
     def predict(self, frames):
         '''
@@ -91,7 +89,6 @@ class LPR():
         batch_preds = self.detector.predict(frames)
         batch_plates = [] # to store coords in each frame as list of list
         batch_plates_imgs = [] # to store cropped plates as flattened list
-        batch_plates_imgs_contrast = [] # to store cropped plates as flattened list
 
         # For each frame
         for preds, frame in zip(batch_preds, frames):
@@ -111,15 +108,13 @@ class LPR():
                     plates.append((x1,y1,x2,y2, clsconf))
             batch_plates.append(plates)
             batch_plates_imgs.extend(frame[y1:y2, x1:x2] for x1,y1,x2,y2,_ in plates)
-            contrast_frame = clahe(frame, self.contrast)
-            batch_plates_imgs_contrast.extend(contrast_frame[y1:y2, x1:x2] for x1,y1,x2,y2,_ in plates)
 
         # record number of plates in each frame
         # so that we can map the predicted plate number to its corresponding frame
         batch_plates_len = tuple(len(sl) for sl in batch_plates)
 
         # batch predict segmentation 
-        batch_preds = self.segmentator.predict(batch_plates_imgs_contrast)
+        batch_preds = self.segmentator.predict(batch_plates_imgs)
 
         # Final result as a json format-like dict
         output = [[] for _ in range(len(frames))]

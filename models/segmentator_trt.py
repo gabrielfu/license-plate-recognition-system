@@ -3,6 +3,7 @@ import time
 from .modules.yolo_trt import TrtYOLO
 from utils.utils import load_classes, get_correct_path
 from utils.bbox import rescale_boxes
+from utils.image_preprocess import clahe
 
 class SegmentatorTRT():
     def __init__(self, cfg):
@@ -15,6 +16,7 @@ class SegmentatorTRT():
         self.model = TrtYOLO(self.model_path, self.input_size, self.n_classes, self.conf_thres, self.nms_thres, self.max_batch_size)
         self.classes = load_classes(get_correct_path(cfg['class_path']))
         self.char_line_threshold = cfg['char_line_threshold']
+        self.contrast = float(cfg['contrast'])
         
     def predict(self, plates_list):
         '''
@@ -35,7 +37,11 @@ class SegmentatorTRT():
                 None
             ]
         '''
-        boxes_list, boxes_centres_list = self.get_rois(plates_list)
+        if self.contrast > 0:
+            boxes_list, boxes_centres_list = self.get_rois([clahe(img, self.contrast) for img in plates_list])
+        else:
+            boxes_list, boxes_centres_list = self.get_rois(plates_list)
+            
         for i, (boxes, boxes_centres) in enumerate(zip(boxes_list, boxes_centres_list)):
             box = self.sort_boxes_single(boxes, boxes_centres)
             boxes_list[i] = box if len(box) > 0 else None # make the output None if no char (it was empty np.array)
