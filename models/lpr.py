@@ -17,7 +17,8 @@ class LPR():
             elif model == 'segmentator':
                 logging.info(f'Initializing Segmentator... (TensorRT={trt})') 
                 if trt:
-                    raise NotImplementedError('Segmentator has no TRT model yet')
+                    from .segmentator_trt import SegmentatorTRT
+                    self.segmentator = SegmentatorTRT(cfg['segmentator_trt'])
                 else:
                     from .segmentator import Segmentator
                     self.segmentator = Segmentator(cfg['segmentator'])
