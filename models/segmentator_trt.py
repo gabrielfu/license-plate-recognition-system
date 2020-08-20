@@ -37,7 +37,8 @@ class SegmentatorTRT():
         '''
         boxes_list, boxes_centres_list = self.get_rois(plates_list)
         for i, (boxes, boxes_centres) in enumerate(zip(boxes_list, boxes_centres_list)):
-            boxes_list[i] = self.sort_boxes_single(boxes, boxes_centres)
+            box = self.sort_boxes_single(boxes, boxes_centres)
+            boxes_list[i] = box if len(box) > 0 else None # make the output None if no char (it was empty np.array)
         return boxes_list
     
     def get_rois(self, img_lst, sort_by='conf'):

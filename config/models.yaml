@@ -60,7 +60,7 @@ segmentator:
 
 segmentator_trt:
   model_path: models/data/yolov4_seg-8_320_fp16.engine
-  class_path: models/data/seg_classes.names
+  class_path: models/data/segmentator_classes.names
   n_classes: 1
   conf_thres: 0.5
   nms_thres: 0.4
