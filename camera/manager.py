@@ -2,7 +2,7 @@ import time
 import logging
 from shapely.geometry import Polygon, box
 from .camera import Camera, CameraType
-from utils.bbox import compute_iou, bbox_polygon_intersection
+from utils import compute_iou, bbox_polygon_intersection
 
 class CameraManager:
     def __init__(self, config):
