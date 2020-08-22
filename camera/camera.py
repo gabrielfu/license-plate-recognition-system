@@ -147,7 +147,8 @@ class Camera:
             num_votes = min(accum_frames_length, self.num_votes)
             if accum_frames_length < self.num_votes:
                 logging.warning(f'{self.cam_ip}: less than {self.num_votes} accum_frames  (only {accum_frames_length})')
-            accum_frames = [self.accum_frames[i] for i in np.linspace(0, accum_frames_length-1, num_votes).astype('int')]
+            idxes = [int((accum_frames_length-1)/(num_votes-1+1e-16) * i) for i in range(num_votes)]
+            accum_frames = [self.accum_frames[i] for i in idxes]
             accum_frames = np.array(accum_frames)
             self._clear_accum_frames()
         return accum_frames
