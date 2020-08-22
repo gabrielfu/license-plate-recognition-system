@@ -141,7 +141,7 @@ class Camera:
                 logging.exception(f'{self.cam_ip}: accum_frames more than {self.num_votes}!')
             accum_frames = self.accum_frames[:self.num_votes]
             accum_frames = np.array(accum_frames)
-        self._clear_accum_frames()
+            self._clear_accum_frames()
         return accum_frames
 
     def get_new_frame(self):
