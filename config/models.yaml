@@ -2,9 +2,9 @@
 # n_cpu: number of cpu workers, 0 means main thread
 
 car_locator:
-  model_cfg: models/data/yolov3.cfg
-  weights_path: models/data/yolov3.weights
-  class_path: models/data/coco.names
+  model_cfg: car_locator_api/data/yolov3.cfg
+  weights_path: car_locator_api/data/yolov3.weights
+  class_path: car_locator_api/data/coco.names
   conf_thres: 0.5
   nms_thres: 0.4
   n_cpu: 0
@@ -13,8 +13,8 @@ car_locator:
   batch_size: 1
 
 car_locator_trt:
-  model_path: models/data/yolov4_coco-1_416_fp16.engine
-  class_path: models/data/coco.names
+  model_path: car_locator_api/data/yolov4_coco-1_416_fp16.engine
+  class_path: car_locator_api/data/coco.names
   n_classes: 80
   conf_thres: 0.5
   nms_thres: 0.4
@@ -26,9 +26,9 @@ lpr:
   pad_y: 0.1
 
 plate_detector:
-  model_cfg: models/data/yolov3_plate_191204.cfg
-  weights_path: models/data/plate_191204.weights
-  class_path: models/data/detector_classes.names
+  model_cfg: lpr_api/data/yolov3_plate_191204.cfg
+  weights_path: lpr_apilpr_api/data/plate_191204.weights
+  class_path: lpr_apilpr_api/data/detector_classes.names
   conf_thres: 0.5
   nms_thres: 0.4
   # batch_size: 8
@@ -37,8 +37,8 @@ plate_detector:
   pred_mode: cv2
 
 plate_detector_trt:
-  model_path: models/data/yolov4_plate-8_416_fp16.engine
-  class_path: models/data/detector_classes.names
+  model_path: lpr_apilpr_api/data/yolov4_plate-8_416_fp16.engine
+  class_path: lpr_apilpr_api/data/detector_classes.names
   n_classes: 1
   conf_thres: 0.5
   nms_thres: 0.4
@@ -46,9 +46,9 @@ plate_detector_trt:
   max_batch_size: 8
 
 segmentator:
-  model_cfg: models/data/yolov3_char_seg_191219.cfg
-  weights_path: models/data/char_seg_191219.weights
-  class_path: models/data/segmentator_classes.names
+  model_cfg: lpr_apilpr_api/data/yolov3_char_seg_191219.cfg
+  weights_path: lpr_apilpr_api/data/char_seg_191219.weights
+  class_path: lpr_apilpr_api/data/segmentator_classes.names
   conf_thres: 0.5
   nms_thres: 0.4
   # batch_size: 8
@@ -58,8 +58,8 @@ segmentator:
   pred_mode: cv2
 
 segmentator_trt:
-  model_path: models/data/yolov4_seg-8_320_fp16.engine
-  class_path: models/data/segmentator_classes.names
+  model_path: lpr_api/data/yolov4_seg-8_320_fp16.engine
+  class_path: lpr_api/data/segmentator_classes.names
   n_classes: 1
   conf_thres: 0.5
   nms_thres: 0.4
@@ -69,9 +69,9 @@ segmentator_trt:
   contrast: 3.5 # 0 to not add contrast
 
 char_recognizer:
-  weights_path: models/data/char_recog_9687.pth
-  # inverse_char_dict_path: models.data.char_dict
+  weights_path: lpr_api/data/char_recog_9687.pth
+  # inverse_char_dict_path: lpr_api.data.char_dict
   # inverse_char_dict: inverse_char_dict
-  inverse_char_dict: models/data/char_dict.yaml
+  inverse_char_dict: lpr_api/data/char_dict.yaml
   # conf_thres: 0.5
   img_size: 16
