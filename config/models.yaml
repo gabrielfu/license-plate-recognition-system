@@ -27,8 +27,8 @@ lpr:
 
 plate_detector:
   model_cfg: lpr_api/data/yolov3_plate_191204.cfg
-  weights_path: lpr_apilpr_api/data/plate_191204.weights
-  class_path: lpr_apilpr_api/data/detector_classes.names
+  weights_path: lpr_api/data/plate_191204.weights
+  class_path: lpr_api/data/detector_classes.names
   conf_thres: 0.5
   nms_thres: 0.4
   # batch_size: 8
@@ -37,8 +37,8 @@ plate_detector:
   pred_mode: cv2
 
 plate_detector_trt:
-  model_path: lpr_apilpr_api/data/yolov4_plate-8_416_fp16.engine
-  class_path: lpr_apilpr_api/data/detector_classes.names
+  model_path: lpr_api/data/yolov4_plate-8_416_fp16.engine
+  class_path: lpr_api/data/detector_classes.names
   n_classes: 1
   conf_thres: 0.5
   nms_thres: 0.4
@@ -46,9 +46,9 @@ plate_detector_trt:
   max_batch_size: 8
 
 segmentator:
-  model_cfg: lpr_apilpr_api/data/yolov3_char_seg_191219.cfg
-  weights_path: lpr_apilpr_api/data/char_seg_191219.weights
-  class_path: lpr_apilpr_api/data/segmentator_classes.names
+  model_cfg: lpr_api/data/yolov3_char_seg_191219.cfg
+  weights_path: lpr_api/data/char_seg_191219.weights
+  class_path: lpr_api/data/segmentator_classes.names
   conf_thres: 0.5
   nms_thres: 0.4
   # batch_size: 8

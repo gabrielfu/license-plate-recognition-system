@@ -1,6 +1,8 @@
 import sys
 import os
 import yaml
+from shapely.geometry import Polygon, box
+
 
 def read_yaml(path):
     return yaml.load(open(path, 'r'), Loader=yaml.FullLoader)

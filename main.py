@@ -1,14 +1,10 @@
-import sys
 import os
 import time
 import logging
 import collections
-
-sys.path.insert(0, os.getcwd())
-
 from camera.manager import CameraManager
 from sender.sender import KafkaSender
-from app_utils import read_yaml, compute_area
+from utils import read_yaml, compute_area
 from logger import setup_logging
 
 import pycuda.autoinit
