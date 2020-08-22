@@ -1,4 +1,3 @@
-import numpy as np
 import sys
 import os
 import yaml
@@ -18,10 +17,9 @@ def get_correct_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-def load_classes(path):
-    """
-    Loads class labels at 'path'
-    """
-    fp = open(path, "r")
-    names = fp.read().split("\n")[:-1]
-    return names
+def compute_area(box):
+    '''
+    Compute area of a bbox
+    '''
+    x1, y1, x2, y2 = box[:4]
+    return (x2-x1)*(y2-y1)
