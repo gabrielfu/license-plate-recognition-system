@@ -9,6 +9,7 @@ cameras:
     type: 'entrance'
     ip: './assets/entrance_1.mp4'
     fps_simulation: 30
+    accum_time: 0.5
     trigger_zone:
       - !!python/tuple [531, 983]
       - !!python/tuple [1050, 700]
@@ -17,6 +18,7 @@ cameras:
   camera2:
     type: 'entrance'
     ip: './assets/entrance_2.mp4'
+    accum_time: 0.5
     fps_simulation: 30
     trigger_zone:
       - !!python/tuple [531, 983]
@@ -27,6 +29,7 @@ cameras:
     type: 'entrance'
     ip: './assets/entrance_3.mp4'
     fps_simulation: 30
+    accum_time: 0.5
     trigger_zone:
       - !!python/tuple [531, 983]
       - !!python/tuple [1050, 700]
