@@ -1,0 +1,6 @@
+[submodule "car_locator_api"]
+	path = car_locator_api
+	url = git@github.com:layerforth/car_locator_api.git
+[submodule "lpr_api"]
+	path = lpr_api
+	url = git@github.com:layerforth/lpr_api.git
