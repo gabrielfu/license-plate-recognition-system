@@ -13,8 +13,7 @@ car_locator:
   batch_size: 1
 
 car_locator_trt:
-  model_path: models/data/yolov4_coco-1_416_416.engine
-  model_name: yolov4-416
+  model_path: models/data/yolov4_coco-1_416_fp16.engine
   class_path: models/data/coco.names
   n_classes: 80
   conf_thres: 0.5
@@ -38,7 +37,7 @@ plate_detector:
   pred_mode: cv2
 
 plate_detector_trt:
-  model_path: models/data/yolov4_plate-8_416_416_fp16.engine
+  model_path: models/data/yolov4_plate-8_416_fp16.engine
   class_path: models/data/detector_classes.names
   n_classes: 1
   conf_thres: 0.5

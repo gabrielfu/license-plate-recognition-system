@@ -58,7 +58,7 @@ def init_LPR(use_trt):
         from models.lpr import LPR
         lpr = LPR(models_cfg, use_trt)
     except:
-        logging.critical('Failed to initialize LPR!')
+        logging.exception('Failed to initialize LPR!')
         exit_app()
     return lpr
 
@@ -75,7 +75,7 @@ def init_car_locator(use_trt):
             car_locator = CarLocator(models_cfg['car_locator'])
             car_batch_size = int(models_cfg['car_locator']['batch_size'])
     except:
-        logging.critical('Failed to initialize Car Locator!')
+        logging.exception('Failed to initialize Car Locator!')
         exit_app()
     return car_locator, car_batch_size
 
@@ -196,7 +196,7 @@ if __name__ == '__main__':
         logging.info('Keyboard Interrupt')
         exit_app()
     except:
-        logging.critical('Failed to start camera!')
+        logging.exception('Failed to start camera!')
         exit_app()
 
     # Initialize kafka sender and start output streaming
@@ -208,7 +208,7 @@ if __name__ == '__main__':
         logging.info('Keyboard Interrupt')
         exit_app()
     except:
-        logging.critical('Failed to start Kafka sender!')
+        logging.exception('Failed to start Kafka sender!')
         exit_app()
         
     try:
@@ -228,7 +228,7 @@ if __name__ == '__main__':
 
         #####################################
         ###         Car detection         ###
-        #####################################      
+        #####################################  
         car_locator_wrapper(all_frames, car_locator, car_batch_size, camera_manager)  
 
         #####################################
@@ -279,7 +279,7 @@ if __name__ == '__main__':
         ###       Output with Kafka       ###
         #####################################
         if license_numbers:
-            logging.info(f'LPR RESULT: {license_numbers}')     
+            logging.info(f'LPR RESULT: {license_numbers}')
             try:
                 sender.send(license_numbers)
             except KeyboardInterrupt:
