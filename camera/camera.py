@@ -15,7 +15,8 @@ class Camera:
     def __init__(self,
                  cam_ip,
                  cam_type,
-                 num_votes=8,
+                 num_votes=5,
+                 accum_time=.5,
                  cam_fps_sim=False
                  ):
         """
@@ -29,6 +30,8 @@ class Camera:
 
         self.cam_ip = cam_ip
         self.cam_type = cam_type
+        self.accum_time = accum_time
+        self.start_accum_time = time.monotonic()
         self.num_votes = num_votes
         self.frame_min_interval = 1/(cam_fps_sim + 1e-16) if cam_fps_sim else 0
         self.fps = None
@@ -104,10 +107,11 @@ class Camera:
             self.new_frame = frame
 
     def _accumulate(self, frame):
-        """Accumulate if self._is_accumulating is True. When self.accum_frames is full, set self._is_accumulating to be False"""
+        """Accumulate if self._is_accumulating is True. When exceed accum_time, set self._is_accumulating to be False
+        """
         if self._is_accumulating:
             self.accum_frames.append(frame)
-            if len(self.accum_frames) >= self.num_votes:
+            if time.monotonic() - self.start_accum_time >= self.accum_time:
                 self._is_accumulating = False
 
     def start(self):
@@ -129,6 +133,8 @@ class Camera:
             logging.warning(f'{self.cam_ip}: started accumulating while previous accumulated frames un-used')
             self._clear_accum_frames()
         self._is_accumulating = True
+        self.start_accum_time = time.monotonic()
+
 
     def get_accumulated_frames(self):
         """To get all the accumulated frames only if its already full
@@ -136,10 +142,12 @@ class Camera:
             accum_frames (None/np.array): None if self.accum_frames not full. np.array of shape self.num_votes*h*w*c otherwise
         """
         accum_frames = None
-        if len(self.accum_frames) >= self.num_votes:
-            if len(self.accum_frames) > self.num_votes:
-                logging.exception(f'{self.cam_ip}: accum_frames more than {self.num_votes}!')
-            accum_frames = self.accum_frames[:self.num_votes]
+        accum_frames_length = len(self.accum_frames)
+        if not self._is_accumulating and accum_frames_length > 0:
+            num_votes = min(accum_frames_length, self.num_votes)
+            if accum_frames_length < self.num_votes:
+                logging.warning(f'{self.cam_ip}: less than {self.num_votes} accum_frames  (only {accum_frames_length})')
+            accum_frames = [self.accum_frames[i] for i in np.linspace(0, accum_frames_length-1, num_votes).astype('int')]
             accum_frames = np.array(accum_frames)
             self._clear_accum_frames()
         return accum_frames
