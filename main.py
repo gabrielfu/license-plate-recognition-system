@@ -52,7 +52,7 @@ def majority_vote(ocr_results):
 def init_LPR(use_trt):
     ''' Import & initialize LPR '''
     try:
-        from lpr_api.models.lpr import LPR
+        from lpr_api.lpr import LPR
         lpr = LPR(models_cfg, use_trt)
     except:
         logging.exception('Failed to initialize LPR!')
@@ -64,11 +64,11 @@ def init_car_locator(use_trt):
     logging.info(f'Initializing Car Locator... (TensorRT={use_trt["car_locator"]})')
     try:
         if use_trt["car_locator"]:
-            from car_locator_api.models.car_locator_trt import CarLocatorTRT
+            from car_locator_api.car_locator_trt import CarLocatorTRT
             car_locator = CarLocatorTRT(models_cfg['car_locator_trt'])
             car_batch_size = int(models_cfg['car_locator_trt']['max_batch_size'])
         else:
-            from car_locator_api.models.car_locator import CarLocator
+            from car_locator_api.car_locator import CarLocator
             car_locator = CarLocator(models_cfg['car_locator'])
             car_batch_size = int(models_cfg['car_locator']['batch_size'])
     except:
