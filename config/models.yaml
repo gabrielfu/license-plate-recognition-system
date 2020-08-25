@@ -77,7 +77,7 @@ char_recognizer:
   img_size: 16
 
 char_recognizer_trt:
-  model_path: lpr_api/data/resnext50-003-b8_32.engine
-  inverse_char_dict: lpr_api/data/inverse_char_dict.yaml
+  model_path: lpr_api/data/resnet18-005-b8_32.engine
+  inverse_char_dict: lpr_api/data/char_dict.yaml
   input_size: !!python/tuple [32, 32]
   max_batch_size: 8
