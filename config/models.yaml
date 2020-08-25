@@ -75,3 +75,8 @@ char_recognizer:
   inverse_char_dict: lpr_api/data/char_dict.yaml
   # conf_thres: 0.5
   img_size: 16
+
+char_recognizer_trt:
+  weights_path: data/resnext50-003-b8_32.engine
+  inverse_char_dict: data/char_dict.yaml
+  img_size: 32
