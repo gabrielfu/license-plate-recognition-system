@@ -6,4 +6,4 @@ use_trt:
   car_locator: True
   plate_detector: True
   segmentator: True
-  char_recognizer: False
+  char_recognizer: True
