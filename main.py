@@ -242,9 +242,14 @@ if __name__ == '__main__':
                 if accum_frames is None:
                     continue
                 num_lpr_predict += 1
-                lpr_output = lpr.predict([f for f in accum_frames if f is not None]) # handle any None frame in accum_frames
-                plate_nums = []
+                # handle any None frame in accum_frames
+                accum_frames = [f for f in accum_frames if f is not None]
+                if len(accum_frames) == 0:
+                    continue
+                # Do prediction
+                lpr_output = lpr.predict(accum_frames) 
                 # For each frame, find the plate with largest area
+                plate_nums = []
                 for frame in lpr_output:
                     max_area = 0
                     best_plate = None
@@ -257,8 +262,14 @@ if __name__ == '__main__':
                     if best_plate is not None:
                         result = best_plate['plate_num']
                         plate_nums.append((result['numbers'], result['confidence']))
-                # Perform majority vote & put into dict
-                license_numbers[ip] = majority_vote(plate_nums)
+                # Perform majority vote
+                plate_num, conf = majority_vote(plate_nums)
+                # Put into dict                
+                license_numbers[ip] = {
+                    'plate_num': plate_num,
+                    'confidence': conf,
+                    'image': accum_frames[0]
+                }
             except KeyboardInterrupt:
                 logging.info('Keyboard Interrupt')
                 exit_app()
@@ -267,8 +278,16 @@ if __name__ == '__main__':
             
         '''
         license_numbers == {
-            '123.0.0.1': ('AB1234', 0.99),
-            '123.0.0.2': ('CD5678', 0.88)
+            '123.0.0.1': {
+                plate_num: AB1234,
+                confidence: 0.99,
+                image: <np.array>
+            },
+            '123.0.0.2': {
+                plate_num: CD5678,
+                confidence: 0.88,
+                image: <np.array>
+            },
         }
         '''
     
