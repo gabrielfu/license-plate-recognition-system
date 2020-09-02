@@ -16,6 +16,7 @@ class SocketSender:
         self.img_buffer_size = config['img_buffer_size']  # (w,h)
         self.messages = queue.Queue(maxsize=config['max_stored_msg'])  # one msg might contain > 1 lpr results
         self.connection_threads = []
+        self._is_started = False
 
     def send(self, lpr_results):
         try:
@@ -30,51 +31,55 @@ class SocketSender:
             return None
 
         self._is_started = True
-        logging.info('Sender started!')
+        self.thread = threading.Thread(target=self._sending, args=())
+        self.thread.start()
+        logging.info('Sender started')
 
-    def _sending():
+    def _sending(self):
         while self._is_started:
             if self.messages.empty():
                 continue
-
             try:
                 lpr_results = self.messages.get_nowait()
             except queue.Empty:
                 logging.exception('Sender try to get message when messages queue is empty (unexpected)')
                 continue
             for cam_ip, lpr_result in lpr_results.items():
+                conf = lpr_result['confidence']
                 if conf is None: # Recognition fail
                     logging.info(f'{cam_ip}: recognition failed')
                     continue
                 plate_num = lpr_result['plate_num']
-                conf = lpr_result['confidence']
                 img = lpr_result['image']
                 timestamp = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-
-            t = threading.Thread(target=self._send_single_msg,
-                                 args=(timestamp, cam_ip, plate_num, conf, img))
-            self.connection_threads.append(t)
+                logging.info(f'{cam_ip} sending!!!!')
+                t = threading.Thread(target=self._send_single_msg,
+                                     args=(timestamp, cam_ip, plate_num, conf, img))
+                t.start()
+                logging.info(f'{t} started')
+                self.connection_threads.append(t)
             for t in self.connection_threads:
                 t.join()
+            logging.info(f'send finished {self.connection_threads}')
             self.connection_threads = []
 
     def _send_single_msg(self, timestamp, cam_ip, plate_num, conf, img):
         meta_data = self.encode_msg(timestamp, cam_ip, plate_num, conf)
         jpg_b64_text = self.encode_img(img)
-
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
             try:
                 server.connect(self.uri)
                 server.sendall(struct.pack(">I", len(meta_data)))  # pack as BE 32-bit unsigned int
                 server.sendall(meta_data)
                 server.sendall(jpg_b64_text)
+                logging.info(f'Socket sent [{timestamp}, {cam_ip}, {plate_num}, {conf}, and image]')
             except socket.error as e:
                 logging.error('Failed to send message via socket: {}'.format(e))
 
     def encode_msg(self, timestamp, cam_ip, plate_num, conf):
-        meta_data = {'timestamp':timestamp, 
+        meta_data = {'timestamp':timestamp,
                      'camera_ip': cam_ip,
-                     'license_num': license_num,
+                     'license_num': plate_num,
                      'confidence': conf
                      }
         meta_data = json.dumps(meta_data).encode('utf8')
