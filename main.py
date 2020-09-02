@@ -233,7 +233,7 @@ if __name__ == '__main__':
         #####################################
         # Predict license numbers
         # For each camera (as a batch)
-        license_numbers = {}
+        lpr_results = {}
         num_lpr_predict = 0
         for ip, frames in all_frames.items():
             try:
@@ -265,7 +265,7 @@ if __name__ == '__main__':
                 # Perform majority vote
                 plate_num, conf = majority_vote(plate_nums)
                 # Put into dict                
-                license_numbers[ip] = {
+                lpr_results[ip] = {
                     'plate_num': plate_num,
                     'confidence': conf,
                     'image': accum_frames[0]
@@ -277,7 +277,7 @@ if __name__ == '__main__':
                 logging.exception(f'{ip}: Error in lpr prediction')
             
         '''
-        license_numbers == {
+        lpr_results == {
             '123.0.0.1': {
                 plate_num: AB1234,
                 confidence: 0.99,
@@ -294,10 +294,10 @@ if __name__ == '__main__':
         #####################################
         ###       Output with Kafka       ###
         #####################################
-        if license_numbers:
-            logging.info(f'LPR RESULT: {license_numbers}')
+        if lpr_results:
+            logging.info(f'LPR RESULT: {lpr_results}')
             try:
-                sender.send(license_numbers)
+                sender.send(lpr_results)
             except KeyboardInterrupt:
                 logging.info('Keyboard Interrupt')
                 exit_app()
