@@ -5,7 +5,8 @@ import time
 import logging
 import collections
 from camera.manager import CameraManager
-from sender.sender import KafkaSender
+# from sender.sender import KafkaSender
+from sender.sender import SocketSender
 from utils import read_yaml, compute_area
 from logger import setup_logging
 
@@ -147,8 +148,9 @@ if __name__ == '__main__':
     cameras_cfg = read_yaml('config/cameras.yaml')
     models_cfg = read_yaml('config/models.yaml')
     logger_cfg = read_yaml('config/logger.yaml')
-    kafka_cfg = read_yaml('config/kafka.yaml')
-    
+    # kafka_cfg = read_yaml('config/kafka.yaml')
+    socket_cfg = read_yaml('config/socket.yaml')
+
     # Setup logging handlers & initialize logger
     os.makedirs(logger_cfg['log_dir'], exist_ok=True)
     setup_logging(logger_cfg)
@@ -197,15 +199,17 @@ if __name__ == '__main__':
         exit_app()
 
     # Initialize kafka sender and start output streaming
-    logging.info('Starting Kafka sender...')
+    logging.info('Starting sender...')
     try:
-        sender = KafkaSender(kafka_cfg)
-        sender.start_kafka_streaming()
+        # sender = KafkaSender(kafka_cfg)
+        # sender.start_kafka_streaming()
+        sender = SocketSender(socket_cfg)
+        sender.start_socket_streaming()
     except KeyboardInterrupt:
         logging.info('Keyboard Interrupt')
         exit_app()
     except:
-        logging.exception('Failed to start Kafka sender!')
+        logging.exception('Failed to start sender!')
         exit_app()
         
     try:
@@ -292,7 +296,7 @@ if __name__ == '__main__':
         '''
     
         #####################################
-        ###       Output with Kafka       ###
+        ###       Output with Sender       ###
         #####################################
         if lpr_results:
             logging.info(f'LPR RESULT: {lpr_results}')

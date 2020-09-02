@@ -11,10 +11,10 @@ import cv2
 import struct
 
 class SocketSender:
-    def __init__(self, config, ip, port, img_buffer_size=(854,480)):
+    def __init__(self, config):
         self.uri = (config['ip'], config['port'])
         self.img_buffer_size = config['img_buffer_size']  # (w,h)
-        self.messages = queue.Queue(maxsize=['max_stored_msg'])  # one msg might contain > 1 lpr results
+        self.messages = queue.Queue(maxsize=config['max_stored_msg'])  # one msg might contain > 1 lpr results
         self.connection_threads = []
 
     def send(self, lpr_results):

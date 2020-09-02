@@ -1,0 +1,4 @@
+ip: '127.0.0.1'
+port: 8000
+img_buffer_size: !!python/tuple [854, 480]
+max_stored_msg: 20
