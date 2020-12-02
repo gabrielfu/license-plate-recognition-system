@@ -68,6 +68,7 @@ class SocketSender:
                 server.sendall(struct.pack(">I", len(meta_data)))  # pack as BE 32-bit unsigned int
                 server.sendall(meta_data)
                 server.sendall(jpg_b64_text)
+                logging.info(f'Socket sent [{timestamp}, {cam_ip}, {plate_num}, {conf}, and image]')
             except socket.error as e:
                 logging.error('Failed to send message via socket: {}'.format(e))
 
