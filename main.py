@@ -299,7 +299,11 @@ if __name__ == '__main__':
         ###       Output with Sender       ###
         #####################################
         if lpr_results:
+<<<<<<< HEAD
             logging.info('LPR RESULT: ', {ip: {x: d[x] for x in d if x!='image'} for ip, d in lpr_results.items()})
+=======
+            logging.info('LPR RESULT: ' + str({ip: {x: d[x] for x in d if x!='image'} for ip, d in lpr_results.items()}))
+>>>>>>> e079eca4f6c2c98cf0f5ec616e3c097894a1d502
             try:
                 sender.send(lpr_results)
             except KeyboardInterrupt:
