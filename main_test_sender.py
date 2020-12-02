@@ -2,8 +2,17 @@ from logger import setup_logging
 from sender.sender import SocketSender
 import time
 import cv2
+import sys
+import logging
+
+
+def exit_app():
+    ''' Shut down the whole application'''
+    logging.info('Shutting down application')
+    sys.exit()
 
 ## init sender
+socket_cfg = read_yaml('config/socket.yaml')
 try:
     # sender = KafkaSender(kafka_cfg)
     # sender.start_kafka_streaming()
@@ -32,5 +41,5 @@ lpr_results == {
 }
 
 while True:
-	sender.send(lpr_results)
-	time.sleep(60)
+    sender.send(lpr_results)
+    time.sleep(60)
