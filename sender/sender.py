@@ -1,6 +1,6 @@
 import threading
 import queue
-from kafka import KafkaProducer
+# from kafka import KafkaProducer
 import json
 import time
 import logging
