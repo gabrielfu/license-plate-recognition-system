@@ -55,7 +55,7 @@ def init_LPR(use_trt):
     try:
         from lpr_api import LPR
         lpr = LPR(models_cfg, use_trt)
-    except:
+    except Exception:
         logging.exception('Failed to initialize LPR!')
         exit_app()
     return lpr
@@ -72,7 +72,7 @@ def init_car_locator(use_trt):
             from car_locator_api import CarLocator
             car_locator = CarLocator(models_cfg['car_locator'])
             car_batch_size = int(models_cfg['car_locator']['batch_size'])
-    except:
+    except Exception:
         logging.exception('Failed to initialize Car Locator!')
         exit_app()
     return car_locator, car_batch_size
@@ -91,11 +91,8 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
     for i in range(0, len(new_frames), car_batch_size):
         i_end = min(i+car_batch_size, len(new_frames))
         try:
-            car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')        
-        except KeyboardInterrupt:
-            logging.info('Keyboard Interrupt')
-            exit_app()
-        except:
+            car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')
+        except Exception:
             logging.exception(f'{cam_ips[i:i_end]}: Failed to predict car detection')
         # Update the trigger status of each batch cameras based on car locations
         try:
@@ -103,10 +100,7 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
                 ip: car for ip, car in zip(cam_ips[i:i_end], car_locations)
             }
             camera_manager.update_camera_trigger_status(all_car_locations)
-        except KeyboardInterrupt:
-            logging.info('Keyboard Interrupt')
-            exit_app()
-        except:
+        except Exception:
             logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
 
 def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
@@ -121,20 +115,14 @@ def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manag
         try:
             car = car_locator.predict([frame], sort_by='conf')[0]
             car_locations = {ip: car}
-        except KeyboardInterrupt:
-            logging.info('Keyboard Interrupt')
-            exit_app()
-        except:
+        except Exception:
             logging.exception(f'{ip}: Failed to predict car detection')
             continue
 
         # Update the trigger status of all cameras based on car locations
         try:
             camera_manager.update_camera_trigger_status(car_locations)
-        except KeyboardInterrupt:
-            logging.info('Keyboard Interrupt')
-            exit_app()
-        except:
+        except Exception:
             logging.exception(f'{ip}: Error when triggering cameras')
             continue
 
@@ -191,10 +179,7 @@ if __name__ == '__main__':
     try:
         camera_manager = CameraManager(cameras_cfg)
         camera_manager.start_cameras_streaming()
-    except KeyboardInterrupt:
-        logging.info('Keyboard Interrupt')
-        exit_app()
-    except:
+    except Exception:
         logging.exception('Failed to start camera!')
         exit_app()
 
@@ -205,16 +190,13 @@ if __name__ == '__main__':
         # sender.start_kafka_streaming()
         sender = SocketSender(socket_cfg)
         sender.start_socket_streaming()
-    except KeyboardInterrupt:
-        logging.info('Keyboard Interrupt')
-        exit_app()
-    except:
+    except Exception:
         logging.exception('Failed to start sender!')
         exit_app()
         
     try:
         time.sleep(app_cfg['app']['sleep_after_init'])
-    except:
+    except Exception:
         pass
 
     #####################################
@@ -274,10 +256,7 @@ if __name__ == '__main__':
                     'confidence': conf,
                     'image': accum_frames[0]
                 }
-            except KeyboardInterrupt:
-                logging.info('Keyboard Interrupt')
-                exit_app()
-            except:
+            except Exception:
                 logging.exception(f'{ip}: Error in lpr prediction')
             
         '''
@@ -302,10 +281,7 @@ if __name__ == '__main__':
             logging.info('LPR RESULT: ' + str({ip: {x: d[x] for x in d if x!='image'} for ip, d in lpr_results.items()}))
             try:
                 sender.send(lpr_results)
-            except KeyboardInterrupt:
-                logging.info('Keyboard Interrupt')
-                exit_app()
-            except:
+            except Exception:
                 logging.critical("Sender failed to send LPR results!")
         
         loop_time = time.time() - loop_start

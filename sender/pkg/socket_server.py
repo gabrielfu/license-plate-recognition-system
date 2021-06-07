@@ -29,7 +29,7 @@ class ThreadedServer(object):
         while True:
             # try:
             #     payload_size = struct.unpack(">I", client.recv(4))[0]
-            # except:
+            # except Exception:
             #     payload_size = 0
 
             try:

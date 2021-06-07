@@ -18,10 +18,7 @@ try:
     # sender.start_kafka_streaming()
     sender = SocketSender(socket_cfg)
     sender.start_socket_streaming()
-except KeyboardInterrupt:
-    logging.info('Keyboard Interrupt')
-    exit_app()
-except:
+except Exception:
     logging.exception('Failed to start sender!')
     exit_app()
 
