@@ -1,12 +1,3 @@
-# Mike
-test.ipynb
-test.py
-LRC_frames/
-
-# Gab
-nms.ipynb
-*.bat
-
 # model weights
 models/data/*.weights
 models/data/*.pth
@@ -149,3 +140,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# pycharm
+.idea/
