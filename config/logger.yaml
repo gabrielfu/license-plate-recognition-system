@@ -30,7 +30,7 @@ handlers:
     
   # Output to single file and perform timed file rotation
   rotating_file_handler:
-    class: logger.CustomTimedRotatingHandler
+    class: lprs.logger.CustomTimedRotatingHandler
     level: INFO
     formatter: standard
     filename: logs/_today.log
