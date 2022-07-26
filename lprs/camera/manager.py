@@ -133,8 +133,8 @@ class CameraManager:
         triggered_coords = None
         for _, car in enumerate(car_locations):
             car_coords = car['coords']
-            car_zone_intersec = bbox_polygon_intersection(trigger_zone, car_coords)
-            if car_zone_intersec > max_intersection:
-                max_intersection = car_zone_intersec
+            car_zone_intersect = bbox_polygon_intersection(trigger_zone, car_coords)
+            if car_zone_intersect > max_intersection:
+                max_intersection = car_zone_intersect
                 triggered_coords = car_coords
         return triggered_coords

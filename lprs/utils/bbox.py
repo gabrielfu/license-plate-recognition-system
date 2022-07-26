@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from typing import Tuple, List
 
-def dot_inside_bbox(dot: Tuple[int, int], bbox: Tuple[int, int, int, int]):
+def dot_inside_bbox(dot: Tuple[int, int], bbox: Tuple[int, int, int, int]) -> bool:
     """
     Check if dot is inside bbox
     dot: (x,y)
@@ -16,7 +16,7 @@ def dot_inside_bbox(dot: Tuple[int, int], bbox: Tuple[int, int, int, int]):
     else:
         return False
 
-def bbox_polygon_intersect(polygon: Polygon, bbox: Tuple[int, int, int, int]):
+def bbox_polygon_intersect(polygon: Polygon, bbox: Tuple[int, int, int, int]) -> bool:
     """
     Check if bbox intersect with a Polygon
     Inputs
@@ -28,7 +28,7 @@ def bbox_polygon_intersect(polygon: Polygon, bbox: Tuple[int, int, int, int]):
     bbox_polygon = box(*bbox)
     return bbox_polygon.intersects(polygon)
 
-def bbox_polygon_intersection(polygon: Polygon, bbox: Tuple[int, int, int, int]):
+def bbox_polygon_intersection(polygon: Polygon, bbox: Tuple[int, int, int, int]) -> float:
     """
     Check if bbox intersect with a Polygon
     Inputs
@@ -40,7 +40,7 @@ def bbox_polygon_intersection(polygon: Polygon, bbox: Tuple[int, int, int, int])
     bbox_polygon = box(*bbox)
     return bbox_polygon.intersection(polygon).area
 
-def bbox_polygon_iou(polygon: Polygon, bbox: Tuple[int, int, int, int]):
+def bbox_polygon_iou(polygon: Polygon, bbox: Tuple[int, int, int, int]) -> float:
     """
     Compute IoU between bbox & a Polygon
     Inputs
@@ -52,7 +52,7 @@ def bbox_polygon_iou(polygon: Polygon, bbox: Tuple[int, int, int, int]):
     bbox_polygon = box(*bbox)
     return bbox_polygon.intersection(polygon).area / bbox_polygon.union(polygon).area
 
-def compute_iou(bbox1: Tuple[int, int, int, int], bbox2: Tuple[int, int, int, int]):
+def compute_iou(bbox1: Tuple[int, int, int, int], bbox2: Tuple[int, int, int, int]) -> float:
     """
     Compute IOU of 2 bboxes
     bbox1: (x1, y1, x2, y2)\n
@@ -69,7 +69,7 @@ def compute_iou(bbox1: Tuple[int, int, int, int], bbox2: Tuple[int, int, int, in
     area2 = (x22-x21) * (y22-y21)
     return intersect / (area1+area2-intersect+1e-16)
 
-def compute_area(bbox: Tuple[int, int, int, int]):
+def compute_area(bbox: Tuple[int, int, int, int]) -> float:
     """
     Compute area of a bbox
     """
@@ -112,7 +112,7 @@ def rescale_boxes_with_pad(boxes, current_dim, original_shape):
     boxes[:, 3] = ((boxes[:, 3] - pad_y // 2) / unpad_h) * orig_h
     return boxes
 
-def xywh2xyxy(inputs: torch.Tensor):
+def xywh2xyxy(inputs: torch.Tensor) -> torch.Tensor:
     outputs = inputs.new(inputs.shape)
     outputs[..., 0] = inputs[..., 0] - inputs[..., 2] / 2
     outputs[..., 1] = inputs[..., 1] - inputs[..., 3] / 2
@@ -120,7 +120,7 @@ def xywh2xyxy(inputs: torch.Tensor):
     outputs[..., 3] = inputs[..., 1] + inputs[..., 3] / 2
     return outputs
 
-def bbox_wh_iou(wh1: torch.Tensor, wh2: torch.Tensor):
+def bbox_wh_iou(wh1: torch.Tensor, wh2: torch.Tensor) -> float:
     wh2 = wh2.t()
     w1, h1 = wh1[0], wh1[1]
     w2, h2 = wh2[0], wh2[1]
@@ -128,7 +128,7 @@ def bbox_wh_iou(wh1: torch.Tensor, wh2: torch.Tensor):
     union_area = (w1 * h1 + 1e-16) + w2 * h2 - inter_area
     return inter_area / union_area
 
-def compute_ious(box1, box2, x1y1x2y2=True):
+def compute_ious(box1: torch.Tensor, box2: torch.Tensor, x1y1x2y2=True) -> torch.Tensor:
     """
     Returns the IoU of two sets of bounding boxes
     If box1 (1,7) & box2 (n,7), compare them one by one and return (n,7)
@@ -163,7 +163,7 @@ def compute_ious(box1, box2, x1y1x2y2=True):
     return iou
 
 
-def non_max_suppression(prediction: torch.Tensor, conf_thres: float=0.5, nms_thres: float=0.4):
+def non_max_suppression(prediction: torch.Tensor, conf_thres: float=0.5, nms_thres: float=0.4) -> List[torch.Tensor]:
     """
     Removes detections with lower object confidence score than 'conf_thres' and performs
     Non-Maximum Suppression to further filter detections.
