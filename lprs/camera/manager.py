@@ -1,8 +1,8 @@
 import time
 import logging
-from shapely.geometry import Polygon, box
+from shapely.geometry import Polygon
 from .camera import Camera, CameraType
-from utils import compute_iou, bbox_polygon_intersection
+from lprs.utils import compute_iou, bbox_polygon_intersection
 
 class CameraManager:
     def __init__(self, config):
