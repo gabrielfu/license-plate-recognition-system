@@ -10,6 +10,8 @@ from utils.utils import read_yaml
 from utils.bbox import compute_area
 from logger import setup_logging
 
+from .models import LPR
+
 import pycuda.autoinit
 
 def exit_app():
@@ -50,17 +52,12 @@ def majority_vote(ocr_results):
     lic_num, conf = max(major_candidates_conf.items(), key=lambda x: x[1])
     return lic_num, conf
 
-def init_LPR(use_trt):
+def init_LPR(models_cfg, use_trt):
     """ Import & initialize LPR """
-    try:
-        from lpr_api import LPR
-        lpr = LPR(models_cfg, use_trt)
-    except Exception:
-        logging.exception('Failed to initialize LPR!')
-        exit_app()
+    lpr = LPR(models_cfg, use_trt)
     return lpr
 
-def init_car_locator(use_trt):
+def init_car_locator(models_cfg, use_trt):
     """ Import & initialize Car Locator """
     logging.info(f'Initializing Car Locator... (TensorRT={use_trt["car_locator"]})')
     try:
@@ -126,7 +123,7 @@ def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manag
             logging.exception(f'{ip}: Error when triggering cameras')
             continue
 
-if __name__ == '__main__':
+def main():
 
     #####################################
     ###       App Initialization      ###
@@ -137,7 +134,7 @@ if __name__ == '__main__':
     models_cfg = read_yaml('../config/models.yaml')
     logger_cfg = read_yaml('../config/logger.yaml')
     kafka_cfg = read_yaml('../config/kafka.yaml')
-    
+
     # Setup logging handlers & initialize logger
     os.makedirs(logger_cfg['log_dir'], exist_ok=True)
     setup_logging(logger_cfg)
@@ -161,12 +158,12 @@ if __name__ == '__main__':
     Otherwise, cuda context issues, or models will predict None all the time
     '''
     if use_trt['car_locator']: # need to initialize LPR first
-        lpr = init_LPR(use_trt)
-        car_locator, car_batch_size = init_car_locator(use_trt)
+        lpr = init_LPR(models_cfg, use_trt)
+        car_locator, car_batch_size = init_car_locator(models_cfg, use_trt)
     else: # need to initialize Car Locator first
-        car_locator, car_batch_size = init_car_locator(use_trt)
-        lpr = init_LPR(use_trt)
-    
+        car_locator, car_batch_size = init_car_locator(models_cfg, use_trt)
+        lpr = init_LPR(models_cfg, use_trt)
+
     # Create wrapper function to handle config car locator batch size, so that it's not checked in every loop
     if car_batch_size > 1:
         car_locator_wrapper = fixed_batch_car_locator
@@ -175,21 +172,13 @@ if __name__ == '__main__':
         
     # Initialize cameras and start frame streaming
     logging.info('Starting cameras...')
-    try:
-        camera_manager = CameraManager(cameras_cfg)
-        camera_manager.start_cameras_streaming()
-    except Exception:
-        logging.exception('Failed to start camera!')
-        exit_app()
+    camera_manager = CameraManager(cameras_cfg)
+    camera_manager.start_cameras_streaming()
 
     # Initialize kafka sender and start output streaming
     logging.info('Starting Kafka sender...')
-    try:
-        sender = KafkaSender(kafka_cfg)
-        sender.start_kafka_streaming()
-    except Exception:
-        logging.exception('Failed to start Kafka sender!')
-        exit_app()
+    sender = KafkaSender(kafka_cfg)
+    sender.start_kafka_streaming()
 
     # Sleep to let other services finish up their init
     time.sleep(app_cfg['app']['sleep_after_init'])
@@ -295,6 +284,12 @@ if __name__ == '__main__':
             loop_time_ttl = collections.defaultdict(float)
 
 
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        logging.error(e)
+        exit_app()
 
 
 
