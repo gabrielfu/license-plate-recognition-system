@@ -1,13 +1,12 @@
 import torch
-import cv2
 import numpy as np
 
 from .modules.darknet import Darknet
-from ..utils.image_preprocess import to_tensor, prepare_raw_imgs
+from ..utils.image_preprocess import prepare_raw_imgs
 from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import non_max_suppression, rescale_boxes_with_pad
 
-class Segmentator():
+class Segmentator:
     def __init__(self, cfg):
         # Yolov3 stuff
         class_path = get_correct_path(cfg['class_path'])
@@ -35,20 +34,20 @@ class Segmentator():
         self.char_line_threshold = cfg['char_line_threshold']
 
     def predict(self, plates_list):
-        '''
+        """
         Inputs
             plates_list: list of np.array(h,w,c)
                 Can be empty
                 Cannot have any None elements
         Outputs
-            list of list of np.array 
+            list of list of np.array
             # for each plate
             [
                 np.array(num_char, 5), # x1,y1,x2,y2,score
                 # None if no character is segmented
                 None
             ]
-        '''
+        """
         boxes_list, boxes_centres_list = self.get_rois(plates_list)
         for i, (boxes, boxes_centres) in enumerate(zip(boxes_list, boxes_centres_list)):
             if boxes is None:
@@ -57,22 +56,22 @@ class Segmentator():
         return boxes_list
 
     def get_rois(self, img_lst):
-        '''
+        """
         Inputs
             img_lst: list of np.array(h,w,c)
                 Can be empty
                 Cannot have any None elements
         Outputs
-            boxes_list: 
+            boxes_list:
             # for each plate
             [
                 # x1,y1,x2,y2,score (=conf*cls_conf)
-                np.array(num_char, 5) 
+                np.array(num_char, 5)
                 # None if no character is segmented
                 None
             ]
-            
-            boxes_centres_list: 
+
+            boxes_centres_list:
             # for each plate
             [
                 # Box centre of each char
@@ -83,7 +82,7 @@ class Segmentator():
                 # None if no char
                 None
             ]
-        '''
+        """
 
         # Image preprocessing
         if not img_lst: # Empty imgs list
@@ -143,7 +142,7 @@ class Segmentator():
         return boxes_list, boxes_centres_list
 
     def sort_boxes_single(self, boxes, boxes_centres):
-        if boxes == []:
+        if not boxes:
             return []
 
         def avg_rois_height(boxes):
@@ -164,7 +163,7 @@ class Segmentator():
         for i in range(len(all_in_one)-1):
             diff_y.append(abs(all_in_one[i][2]-all_in_one[i+1][2]))
 
-        if diff_y == []:
+        if not diff_y:
             return None
         #if only one line, sort by x axis and done
         if max(diff_y) < char_line_threshold:

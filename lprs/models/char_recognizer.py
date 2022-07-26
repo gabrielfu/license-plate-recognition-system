@@ -7,7 +7,7 @@ from .modules.resnext import ResNeXt
 from ..utils.image_preprocess import to_tensor
 from ..utils.utils import get_correct_path
 
-class CharRecognizer():
+class CharRecognizer:
     def __init__(self, cfg):
         weights_path = get_correct_path(cfg['weights_path'])
         self.img_size = cfg['img_size']

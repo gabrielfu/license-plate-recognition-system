@@ -6,7 +6,6 @@ import tensorrt as trt
 import pycuda.driver as cuda
 
 from ...utils.tensorrt import post_processing
-import time
 
 try:
     # Sometimes python2 does not understand FileNotFoundError
@@ -18,7 +17,7 @@ def GiB(val):
     return val * 1 << 30
 
 # Simple helper data class that's a little nicer to use than a 2-tuple.
-class HostDeviceMem(object):
+class HostDeviceMem:
     def __init__(self, host_mem, device_mem):
         self.host = host_mem
         self.device = device_mem
@@ -67,7 +66,7 @@ def do_inference(context, bindings, inputs, outputs, stream):
     return [out.host for out in outputs]
 
 
-class TrtYOLO(object):
+class TrtYOLO:
     def __init__(self, engine_path, input_size, n_classes, conf, nms_conf, max_batch_size):
         cuda.init()
         self.TRT_LOGGER = trt.Logger(min_severity=trt.Logger.ERROR)

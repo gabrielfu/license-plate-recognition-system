@@ -1,9 +1,11 @@
 import logging
 import numpy as np
 
-class LPR():
-    def __init__(self, cfg, use_trt={}):
+class LPR:
+    def __init__(self, cfg, use_trt=None):
         # Sort the dict by values so that torch models get initialized first
+        if use_trt is None:
+            use_trt = {}
         use_trt = tuple(sorted(use_trt.items(), key=lambda x: x[1], reverse=False))
         # Initialize the models
         for model, trt in use_trt:

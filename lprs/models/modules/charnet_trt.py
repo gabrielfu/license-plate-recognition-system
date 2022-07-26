@@ -17,7 +17,7 @@ def GiB(val):
     return val * 1 << 30
 
 # Simple helper data class that's a little nicer to use than a 2-tuple.
-class HostDeviceMem(object):
+class HostDeviceMem:
     def __init__(self, host_mem, device_mem):
         self.host = host_mem
         self.device = device_mem
@@ -66,7 +66,7 @@ def do_inference(context, bindings, inputs, outputs, stream):
     return [out.host for out in outputs]
 
 
-class TrtCharNet(object):
+class TrtCharNet:
     def __init__(self, engine_path, input_size, max_batch_size):
         cuda.init()
         self.TRT_LOGGER = trt.Logger(min_severity=trt.Logger.ERROR)

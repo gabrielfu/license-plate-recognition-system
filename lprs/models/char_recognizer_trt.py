@@ -5,7 +5,7 @@ import numpy as np
 from ..utils.utils import get_correct_path
 from .modules.charnet_trt import TrtCharNet
 
-class CharRecognizerTRT():
+class CharRecognizerTRT
     def __init__(self, cfg):
         self.model_path = get_correct_path(cfg['model_path'])
         self.input_size = cfg['input_size']

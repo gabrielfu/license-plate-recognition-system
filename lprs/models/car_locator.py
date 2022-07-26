@@ -6,7 +6,7 @@ from ..utils.image_preprocess import to_tensor, prepare_raw_imgs
 from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import non_max_suppression, rescale_boxes_with_pad, diff_cls_nms
 
-class CarLocator():
+class CarLocator:
     def __init__(self, cfg):
         # Yolov3 stuff
         class_path = get_correct_path(cfg['class_path'])

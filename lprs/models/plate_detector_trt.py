@@ -4,7 +4,7 @@ from .modules.yolo_trt import TrtYOLO
 from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import rescale_boxes
 
-class PlateDetectorTRT():
+class PlateDetectorTRT
     def __init__(self, cfg):
         self.input_size = cfg['input_size'] # (h,w)
         self.model_path = cfg['model_path']

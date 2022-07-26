@@ -5,7 +5,7 @@ from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import rescale_boxes
 from ..utils.image_preprocess import clahe
 
-class SegmentatorTRT():
+class SegmentatorTRT
     def __init__(self, cfg):
         self.input_size = cfg['input_size'] # (h,w)
         self.model_path = cfg['model_path']

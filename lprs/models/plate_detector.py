@@ -6,7 +6,7 @@ from ..utils.image_preprocess import to_tensor, prepare_raw_imgs
 from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import non_max_suppression, rescale_boxes_with_pad
 
-class PlateDetector():
+class PlateDetector:
     def __init__(self, cfg):
         class_path = get_correct_path(cfg['class_path'])
         weights_path = get_correct_path(cfg['weights_path'])
