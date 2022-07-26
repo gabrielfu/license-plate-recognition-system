@@ -1,8 +1,9 @@
 from shapely.geometry import Polygon, box
 import torch
 import numpy as np
+from typing import Tuple, List
 
-def dot_inside_bbox(dot, bbox):
+def dot_inside_bbox(dot: Tuple[int, int], bbox: Tuple[int, int, int, int]):
     """
     Check if dot is inside bbox
     dot: (x,y)
@@ -15,43 +16,43 @@ def dot_inside_bbox(dot, bbox):
     else:
         return False
 
-def bbox_polygon_intersect(trigger_zone, bbox):
+def bbox_polygon_intersect(polygon: Polygon, bbox: Tuple[int, int, int, int]):
     """
-    Check if bbox intersect with trigger_zone Polygon
+    Check if bbox intersect with a Polygon
     Inputs
-        trigger_zone: shapely.Geometry.Polygon
+        polygon: shapely.Geometry.Polygon
         bbox: tuple (x1,y1,x2,y2)
     Outputs
         Boolean
     """
     bbox_polygon = box(*bbox)
-    return bbox_polygon.intersects(trigger_zone)
+    return bbox_polygon.intersects(polygon)
 
-def bbox_polygon_intersection(trigger_zone, bbox):
+def bbox_polygon_intersection(polygon: Polygon, bbox: Tuple[int, int, int, int]):
     """
-    Check if bbox intersect with trigger_zone Polygon
+    Check if bbox intersect with a Polygon
     Inputs
-        trigger_zone: shapely.Geometry.Polygon
+        polygon: shapely.Geometry.Polygon
         bbox: tuple (x1,y1,x2,y2)
     Outputs
         Boolean
     """
     bbox_polygon = box(*bbox)
-    return bbox_polygon.intersection(trigger_zone).area
+    return bbox_polygon.intersection(polygon).area
 
-def bbox_polygon_iou(trigger_zone, bbox):
+def bbox_polygon_iou(polygon: Polygon, bbox: Tuple[int, int, int, int]):
     """
-    Compute IoU between bbox & trigger_zone Polygon
+    Compute IoU between bbox & a Polygon
     Inputs
-        trigger_zone: shapely.Geometry.Polygon
+        polygon: shapely.Geometry.Polygon
         bbox: tuple (x1,y1,x2,y2)
     Outputs
         IoU (float)
     """
     bbox_polygon = box(*bbox)
-    return bbox_polygon.intersection(trigger_zone).area / bbox_polygon.union(trigger_zone).area
+    return bbox_polygon.intersection(polygon).area / bbox_polygon.union(polygon).area
 
-def compute_iou(bbox1, bbox2):
+def compute_iou(bbox1: Tuple[int, int, int, int], bbox2: Tuple[int, int, int, int]):
     """
     Compute IOU of 2 bboxes
     bbox1: (x1, y1, x2, y2)\n
@@ -68,11 +69,11 @@ def compute_iou(bbox1, bbox2):
     area2 = (x22-x21) * (y22-y21)
     return intersect / (area1+area2-intersect+1e-16)
 
-def compute_area(box):
+def compute_area(bbox: Tuple[int, int, int, int]):
     """
     Compute area of a bbox
     """
-    x1, y1, x2, y2 = box[:4]
+    x1, y1, x2, y2 = bbox[:4]
     return (x2-x1)*(y2-y1)
 
 def rescale_boxes(boxes, current_dim, original_shape):
@@ -111,7 +112,7 @@ def rescale_boxes_with_pad(boxes, current_dim, original_shape):
     boxes[:, 3] = ((boxes[:, 3] - pad_y // 2) / unpad_h) * orig_h
     return boxes
 
-def xywh2xyxy(inputs):
+def xywh2xyxy(inputs: torch.Tensor):
     outputs = inputs.new(inputs.shape)
     outputs[..., 0] = inputs[..., 0] - inputs[..., 2] / 2
     outputs[..., 1] = inputs[..., 1] - inputs[..., 3] / 2
@@ -119,7 +120,7 @@ def xywh2xyxy(inputs):
     outputs[..., 3] = inputs[..., 1] + inputs[..., 3] / 2
     return outputs
 
-def bbox_wh_iou(wh1, wh2):
+def bbox_wh_iou(wh1: torch.Tensor, wh2: torch.Tensor):
     wh2 = wh2.t()
     w1, h1 = wh1[0], wh1[1]
     w2, h2 = wh2[0], wh2[1]
@@ -162,7 +163,7 @@ def compute_ious(box1, box2, x1y1x2y2=True):
     return iou
 
 
-def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
+def non_max_suppression(prediction: torch.Tensor, conf_thres: float=0.5, nms_thres: float=0.4):
     """
     Removes detections with lower object confidence score than 'conf_thres' and performs
     Non-Maximum Suppression to further filter detections.
@@ -218,24 +219,7 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
 
     return output
 
-# def diff_cls_nms_filter_conf(imgs_detections, conf_thres=0.5, nms_thres=0.4, sort_by='conf', xywh=True):
-#     '''
-#     Different class NMS for multiple image predictions
-#     Args:
-#         prediction: tensor (num_imgs, num_anchors, num_classes+5)
-#         conf_thres: discard all predictions with confidence below this value
-#         nms_thres: discard all predictions with IoU above this value
-#         sort_by: sort filtered predictions by confidence or area
-#     Returns detections with shape:
-#         (x1, y1, x2, y2, object_conf, class_score, class_pred)
-#     '''
-#     # From (center x, center y, width, height) to (x1, y1, x2, y2)
-#     if xywh:
-#         prediction[...,:4] = xywh2xyxy(prediction[...,:4])
-####
-#### Not implementing because of unknown effects from merging all bboxes of different classes    
-
-def diff_cls_nms(img_detections, nms_thres=0.4, sort_by='conf'):
+def diff_cls_nms(img_detections: List[np.ndarray], nms_thres: float=0.4, sort_by: str='conf'):
     '''
     Different class NMS for one image prediction
     Inputs:

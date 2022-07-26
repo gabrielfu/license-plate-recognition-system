@@ -6,7 +6,8 @@ import logging
 import collections
 from camera.manager import CameraManager
 from sender.sender import KafkaSender
-from utils import read_yaml, compute_area
+from utils.utils import read_yaml
+from utils.bbox import compute_area
 from logger import setup_logging
 
 import pycuda.autoinit
