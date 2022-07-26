@@ -66,7 +66,7 @@ class KafkaSender:
                 try:
                     self.producer.send(self.topic, output)
                     logging.info('Sender sent result {}'.format(output))
-                except:
+                except Exception:
                     logging.exception('Failed to send message {}'.format(output))
 
     def send(self, license_numbers):

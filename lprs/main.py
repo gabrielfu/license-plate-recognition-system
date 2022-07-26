@@ -55,7 +55,7 @@ def init_LPR(use_trt):
     try:
         from lpr_api import LPR
         lpr = LPR(models_cfg, use_trt)
-    except:
+    except Exception:
         logging.exception('Failed to initialize LPR!')
         exit_app()
     return lpr
@@ -72,7 +72,7 @@ def init_car_locator(use_trt):
             from car_locator_api import CarLocator
             car_locator = CarLocator(models_cfg['car_locator'])
             car_batch_size = int(models_cfg['car_locator']['batch_size'])
-    except:
+    except Exception:
         logging.exception('Failed to initialize Car Locator!')
         exit_app()
     return car_locator, car_batch_size
@@ -190,11 +190,9 @@ if __name__ == '__main__':
     except Exception:
         logging.exception('Failed to start Kafka sender!')
         exit_app()
-        
-    try:
-        time.sleep(app_cfg['app']['sleep_after_init'])
-    except:
-        pass
+
+    # Sleep to let other services finish up their init
+    time.sleep(app_cfg['app']['sleep_after_init'])
 
     #####################################
     ###          Start Loop           ###
