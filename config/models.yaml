@@ -2,9 +2,9 @@
 # n_cpu: number of cpu workers, 0 means main thread
 
 car_locator:
-  model_cfg: car_locator_api/data/yolov3.cfg
-  weights_path: car_locator_api/data/yolov3.weights
-  class_path: car_locator_api/data/coco.names
+  model_cfg: data/yolov3.cfg
+  weights_path: data/yolov3.weights
+  class_path: data/coco.names
   conf_thres: 0.5
   nms_thres: 0.4
   n_cpu: 0
@@ -13,8 +13,8 @@ car_locator:
   batch_size: 1
 
 car_locator_trt:
-  model_path: car_locator_api/data/yolov4_coco-1_416_fp16.engine
-  class_path: car_locator_api/data/coco.names
+  model_path: data/yolov4_coco-1_416_fp16.engine
+  class_path: data/coco.names
   n_classes: 80
   conf_thres: 0.5
   nms_thres: 0.4
@@ -26,9 +26,9 @@ lpr:
   pad_y: 0.1
 
 plate_detector:
-  model_cfg: lpr_api/data/yolov3_plate_191204.cfg
-  weights_path: lpr_api/data/plate_191204.weights
-  class_path: lpr_api/data/detector_classes.names
+  model_cfg: data/yolov3_plate_191204.cfg
+  weights_path: data/plate_191204.weights
+  class_path: data/detector_classes.names
   conf_thres: 0.5
   nms_thres: 0.4
   # batch_size: 8
@@ -37,8 +37,8 @@ plate_detector:
   pred_mode: cv2
 
 plate_detector_trt:
-  model_path: lpr_api/data/yolov4_plate-8_416_fp16.engine
-  class_path: lpr_api/data/detector_classes.names
+  model_path: data/yolov4_plate-8_416_fp16.engine
+  class_path: data/detector_classes.names
   n_classes: 1
   conf_thres: 0.5
   nms_thres: 0.4
@@ -46,9 +46,9 @@ plate_detector_trt:
   max_batch_size: 8
 
 segmentator:
-  model_cfg: lpr_api/data/yolov3_char_seg_191219.cfg
-  weights_path: lpr_api/data/char_seg_191219.weights
-  class_path: lpr_api/data/segmentator_classes.names
+  model_cfg: data/yolov3_char_seg_191219.cfg
+  weights_path: data/char_seg_191219.weights
+  class_path: data/segmentator_classes.names
   conf_thres: 0.5
   nms_thres: 0.4
   # batch_size: 8
@@ -58,8 +58,8 @@ segmentator:
   pred_mode: cv2
 
 segmentator_trt:
-  model_path: lpr_api/data/yolov4_seg-8_320_fp16.engine
-  class_path: lpr_api/data/segmentator_classes.names
+  model_path: data/yolov4_seg-8_320_fp16.engine
+  class_path: data/segmentator_classes.names
   n_classes: 1
   conf_thres: 0.5
   nms_thres: 0.4
@@ -71,15 +71,15 @@ segmentator_trt:
 char_recognizer:
   model: resnet
   model_size: 18
-  weights_path: lpr_api/data/resnet18-005-b8_32.pth
+  weights_path: data/resnet18-005-b8_32.pth
   # inverse_char_dict_path: lpr_api.data.char_dict
   # inverse_char_dict: inverse_char_dict
-  inverse_char_dict: lpr_api/data/char_dict.yaml
+  inverse_char_dict: data/char_dict.yaml
   # conf_thres: 0.5
   img_size: 32
 
 char_recognizer_trt:
-  model_path: lpr_api/data/resnet18-005-b8_32.engine
-  inverse_char_dict: lpr_api/data/char_dict.yaml
+  model_path: data/resnet18-005-b8_32.engine
+  inverse_char_dict: data/char_dict.yaml
   input_size: !!python/tuple [32, 32]
   max_batch_size: 8
