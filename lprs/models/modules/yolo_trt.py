@@ -104,13 +104,13 @@ class TrtYOLO:
         return imgs_array
 
     def detect(self, img_lst):
-        '''
+        """
         Allocate buffers each prediction on the fly to avoid context issues
         inputs:
             - img_lst: list of BGR np arrays
         outputs:
             - imgs_preds: list of list of preds (x1,y1,x2,y2,conf,cls_conf,cls)  [p.s. normalized coords]
-        '''
+        """
 #        start = time.time()
         imgs_array = self._preprocess_img_lst(img_lst)
 

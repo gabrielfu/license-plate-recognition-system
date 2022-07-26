@@ -1,6 +1,6 @@
-'''
+"""
 Post-processing functions for TensorRT YOLO
-'''
+"""
 
 import numpy as np
 
