@@ -27,9 +27,7 @@ class KafkaSender:
                 self.producer =  KafkaProducer(bootstrap_servers=self.bootstrap_servers, 
                                                value_serializer=encode_json)
                 return self.producer
-            except KeyboardInterrupt:
-                raise
-            except:
+            except Exception:
                 if first_time:
                     logging.error('Failed to initialize Kafka producer, re-initializing...: bootstrap_servers {}'.format(self.bootstrap_servers))
                     first_time = False

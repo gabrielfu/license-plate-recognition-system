@@ -92,10 +92,7 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
         i_end = min(i+car_batch_size, len(new_frames))
         try:
             car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')        
-        except KeyboardInterrupt:
-            logging.info('Keyboard Interrupt')
-            exit_app()
-        except:
+        except Exception:
             logging.exception(f'{cam_ips[i:i_end]}: Failed to predict car detection')
         # Update the trigger status of each batch cameras based on car locations
         try:
@@ -103,10 +100,7 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
                 ip: car for ip, car in zip(cam_ips[i:i_end], car_locations)
             }
             camera_manager.update_camera_trigger_status(all_car_locations)
-        except KeyboardInterrupt:
-            logging.info('Keyboard Interrupt')
-            exit_app()
-        except:
+        except Exception:
             logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
 
 def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
@@ -184,10 +178,7 @@ if __name__ == '__main__':
     try:
         camera_manager = CameraManager(cameras_cfg)
         camera_manager.start_cameras_streaming()
-    except KeyboardInterrupt:
-        logging.info('Keyboard Interrupt')
-        exit_app()
-    except:
+    except Exception:
         logging.exception('Failed to start camera!')
         exit_app()
 
@@ -196,10 +187,7 @@ if __name__ == '__main__':
     try:
         sender = KafkaSender(kafka_cfg)
         sender.start_kafka_streaming()
-    except KeyboardInterrupt:
-        logging.info('Keyboard Interrupt')
-        exit_app()
-    except:
+    except Exception:
         logging.exception('Failed to start Kafka sender!')
         exit_app()
         
@@ -265,10 +253,7 @@ if __name__ == '__main__':
                     'confidence': conf,
                     'image': accum_frames[0]
                 }
-            except KeyboardInterrupt:
-                logging.info('Keyboard Interrupt')
-                exit_app()
-            except:
+            except Exception:
                 logging.exception(f'{ip}: Error in lpr prediction')
             
         '''
@@ -293,10 +278,7 @@ if __name__ == '__main__':
             logging.info(f'LPR RESULT: {license_numbers}')
             try:
                 sender.send(license_numbers)
-            except KeyboardInterrupt:
-                logging.info('Keyboard Interrupt')
-                exit_app()
-            except:
+            except Exception:
                 logging.critical("Sender failed to send LPR results!")
         
         loop_time = time.time() - loop_start
