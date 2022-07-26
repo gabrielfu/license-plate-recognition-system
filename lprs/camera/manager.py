@@ -12,13 +12,15 @@ class CameraManager:
         self.cameras = self.init_cameras(config['cameras'])
 
     def start_cameras_streaming(self):
-        """To start all the cameras
+        """
+        To start all the cameras
         """
         for cam_ip in self.cameras.keys():
             self.cameras[cam_ip]['camera'].start()
 
     def init_cameras(self, cameras_dict):
-        """Construct a dictionary that stores all camera info
+        """
+        Construct a dictionary that stores all camera info
         returns:
             cameras (dict('cam_ip': dict('camera': Camera, 'trigger_zone': Polygon, 'last_triggered_coords': tuple, 
             'last_triggered_time': datetime), ...)):
@@ -50,7 +52,8 @@ class CameraManager:
         return cameras
 
     def get_all_fps(self):
-        """Get all fps of all cameras
+        """
+        Get all fps of all cameras
         return:
             all_fps (dict('cam_ip': float, ...))
         """
@@ -60,7 +63,8 @@ class CameraManager:
         return all_fps
 
     def get_all_frames(self):
-        """Get camera.new_frame and camera.accum_frames for all self.cameras.
+        """
+        Get camera.new_frame and camera.accum_frames for all self.cameras.
         return:
             all_frames (dict('cam_ip': dict(new_frame: None/np.array(h*w*c), accum_frames: None/np.array(num_votes*h*w*c)), ...)): 
             example:
@@ -82,7 +86,8 @@ class CameraManager:
         return all_frames
 
     def update_camera_trigger_status(self, all_car_locations):
-        """Based on located car locations to justify if cameras need to start accumulating
+        """
+        Based on located car locations to justify if cameras need to start accumulating
         Args:
             all_car_locations (dict('cam_ip': [dict('coords': tuple(int x1, int y1, int x2, int y2), 'confidence': float), ...]))
         """
@@ -116,7 +121,8 @@ class CameraManager:
 
     @staticmethod
     def find_triggered_car_coords(trigger_zone, car_locations):
-        """To find if there's any car's bbox touches trigger_zone. If multiple car do, return the max intersection one.
+        """
+        To find if there's any car's bbox touches trigger_zone. If multiple car do, return the max intersection one.
         args:
             tigger_zone (Polygon): the camera's trigger zone
             car_locations (list(dict('coords': tuple(int x1, int y1, int x2, int y2), 'confidence': float), ...))

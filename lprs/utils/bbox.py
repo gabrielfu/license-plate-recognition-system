@@ -3,60 +3,60 @@ import torch
 import numpy as np
 
 def dot_inside_bbox(dot, bbox):
-    '''
+    """
     Check if dot is inside bbox
     dot: (x,y)
     bbox: (x1, y1, x2, y2)
-    '''
+    """
     x1,y1,x2,y2 = bbox
     dot_x, dot_y = dot
-    if x1 < dot_x and x2 > dot_x and y1 < dot_y and y2 > dot_y:
+    if x1 < dot_x < x2 and y1 < dot_y < y2:
         return True
     else:
         return False
 
 def bbox_polygon_intersect(trigger_zone, bbox):
-    '''
+    """
     Check if bbox intersect with trigger_zone Polygon
     Inputs
         trigger_zone: shapely.Geometry.Polygon
         bbox: tuple (x1,y1,x2,y2)
     Outputs
         Boolean
-    '''
+    """
     bbox_polygon = box(*bbox)
     return bbox_polygon.intersects(trigger_zone)
 
 def bbox_polygon_intersection(trigger_zone, bbox):
-    '''
+    """
     Check if bbox intersect with trigger_zone Polygon
     Inputs
         trigger_zone: shapely.Geometry.Polygon
         bbox: tuple (x1,y1,x2,y2)
     Outputs
         Boolean
-    '''
+    """
     bbox_polygon = box(*bbox)
     return bbox_polygon.intersection(trigger_zone).area
 
 def bbox_polygon_iou(trigger_zone, bbox):
-    '''
+    """
     Compute IoU between bbox & trigger_zone Polygon
     Inputs
         trigger_zone: shapely.Geometry.Polygon
         bbox: tuple (x1,y1,x2,y2)
     Outputs
         IoU (float)
-    '''
+    """
     bbox_polygon = box(*bbox)
     return bbox_polygon.intersection(trigger_zone).area / bbox_polygon.union(trigger_zone).area
 
 def compute_iou(bbox1, bbox2):
-    '''
+    """
     Compute IOU of 2 bboxes
     bbox1: (x1, y1, x2, y2)\n
     bbox2: (x1, y1, x2, y2)
-    '''
+    """
     x11, y11, x12, y12 = bbox1[:4]
     x21, y21, x22, y22 = bbox2[:4]
 
@@ -69,9 +69,9 @@ def compute_iou(bbox1, bbox2):
     return intersect / (area1+area2-intersect+1e-16)
 
 def compute_area(box):
-    '''
+    """
     Compute area of a bbox
-    '''
+    """
     x1, y1, x2, y2 = box[:4]
     return (x2-x1)*(y2-y1)
 
@@ -243,9 +243,9 @@ def diff_cls_nms(img_detections, nms_thres=0.4, sort_by='conf'):
     '''
 
     if len(img_detections) == 0:
-    	return img_detections
+        return img_detections
 
-    # Sort in decending order by confidence first
+    # Sort in descending order by confidence first
     if sort_by == 'conf':
         img_detections = sorted(img_detections, key=lambda x: x[4], reverse=True)
     elif sort_by == 'area':

@@ -12,18 +12,18 @@ from logger import setup_logging
 import pycuda.autoinit
 
 def exit_app():
-    ''' Shut down the whole application'''
+    """ Shut down the whole application"""
     logging.info('Shutting down application')
     sys.exit()
 
 def majority_vote(ocr_results):
-    '''
+    """
     Input:
     - ocr_results: list of tuples e.g. [('PV1954',0.99),('PV1954',0.97),('PV1934',0.91),...]
 
     Output:
     - tuple(num, conf) e.g. ('PV1954', 0.99)
-    '''
+    """
     if not ocr_results:  # Empty
         return 'Recognition fail', None
 
@@ -50,7 +50,7 @@ def majority_vote(ocr_results):
     return lic_num, conf
 
 def init_LPR(use_trt):
-    ''' Import & initialize LPR '''
+    """ Import & initialize LPR """
     try:
         from lpr_api import LPR
         lpr = LPR(models_cfg, use_trt)
@@ -60,7 +60,7 @@ def init_LPR(use_trt):
     return lpr
 
 def init_car_locator(use_trt):
-    ''' Import & initialize Car Locator '''
+    """ Import & initialize Car Locator """
     logging.info(f'Initializing Car Locator... (TensorRT={use_trt["car_locator"]})')
     try:
         if use_trt["car_locator"]:
@@ -77,7 +77,7 @@ def init_car_locator(use_trt):
     return car_locator, car_batch_size
 
 def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
-    ''' Wrapper function to do fixed batch car location detection '''
+    """ Wrapper function to do fixed batch car location detection """
     # Extract new frame for each camera
     new_frames = []
     cam_ips = []
@@ -109,7 +109,7 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
             logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
 
 def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
-    ''' Wrapper function to do single img car location detection '''
+    """ Wrapper function to do single img car location detection """
     # all_car_locations = {}
     for ip, frames in all_frames.items():
         # Extract new frame for each camera
@@ -120,20 +120,14 @@ def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manag
         try:
             car = car_locator.predict([frame], sort_by='conf')[0]
             car_locations = {ip: car}
-        except KeyboardInterrupt:
-            logging.info('Keyboard Interrupt')
-            exit_app()
-        except:
+        except Exception:
             logging.exception(f'{ip}: Failed to predict car detection')
             continue
 
         # Update the trigger status of all cameras based on car locations
         try:
             camera_manager.update_camera_trigger_status(car_locations)
-        except KeyboardInterrupt:
-            logging.info('Keyboard Interrupt')
-            exit_app()
-        except:
+        except Exception:
             logging.exception(f'{ip}: Error when triggering cameras')
             continue
 

@@ -58,7 +58,8 @@ class Camera:
         return self._is_accumulating
 
     def set(self, propId, value):
-        """For setting a opencv VideoCapture property
+        """
+        For setting a opencv VideoCapture property
         propId (float): for example: cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT
         value (value of the property)
         """
@@ -80,7 +81,8 @@ class Camera:
                 self.start_time = time.monotonic()
 
     def _updating(self):
-        """Camera updating process
+        """
+        Camera updating process
         1. keep updating self.new_frame if self._is_started
         2. keep accumulating if self._is_accumulating
         """
@@ -107,7 +109,8 @@ class Camera:
             self.new_frame = frame
 
     def _accumulate(self, frame):
-        """Accumulate if self._is_accumulating is True. When exceed accum_time, set self._is_accumulating to be False
+        """
+        Accumulate if self._is_accumulating is True. When exceed accum_time, set self._is_accumulating to be False
         """
         if self._is_accumulating:
             self.accum_frames.append(frame)
@@ -115,7 +118,8 @@ class Camera:
                 self._is_accumulating = False
 
     def start(self):
-        """To start reading frames """
+        """
+        To start reading frames """
         if self._is_started:
             logging.warning(f'{self.cam_ip}: attempted to start camera when it has already started')
             return None
@@ -126,7 +130,8 @@ class Camera:
         logging.info('Camera started: {}'.format(self.cam_ip))
 
     def start_accumulate(self):
-        """To start putting frames into self.accum_frames. Please call this function only after calling start()"""
+        """
+        To start putting frames into self.accum_frames. Please call this function only after calling start()"""
         if self._is_accumulating:
             logging.warning(f'{self.cam_ip}: started accumulating while previous accumulating process un-finished')
         if len(self.accum_frames) != 0:
@@ -137,7 +142,8 @@ class Camera:
 
 
     def get_accumulated_frames(self):
-        """To get all the accumulated frames only if its already full
+        """
+        To get all the accumulated frames only if its already full
         returns:
             accum_frames (None/np.array): None if self.accum_frames not full. np.array of shape self.num_votes*h*w*c otherwise
         """
@@ -154,7 +160,8 @@ class Camera:
         return accum_frames
 
     def get_new_frame(self):
-        """Get self.new_frame with lock
+        """
+        Get self.new_frame with lock
         returns:
             new_frame (None/np.array): None if camera failed to get frame, np.array of shape h*w*c otherwise
         """

@@ -4,9 +4,9 @@ import torch.nn.functional as F
 import cv2
 
 def to_tensor(img):
-    '''
-    Tranform np array(W,H,C) to torch tensor (C,W,H)
-    '''
+    """
+    Transform np array(W,H,C) to torch tensor (C,W,H)
+    """
     max_pixel_value = np.max(img)
     if max_pixel_value > 1.:
         img = torch.tensor(img, dtype=torch.float32)/255.
@@ -21,9 +21,9 @@ def resize(image, size):
     return image
 
 def pad_to_square(img, pad_value):
-    '''
+    """
     img: (c,h,w) torch tensor
-    '''
+    """
     _, h, w = img.shape
     dim_diff = np.abs(h - w)
     # (upper / left) padding and (lower / right) padding
@@ -44,10 +44,10 @@ def cv_resize(img, shape):
 
 # Our codes
 def cv_preprocess(img):
-    '''
+    """
     (1920*n) * (1080*n) this shape of rectangle might be better
     Accepts image of shape (width, height, num_channels) or (width, height)
-    '''
+    """
     width = img.shape[1]
     height = img.shape[0]
 
@@ -61,12 +61,12 @@ def cv_preprocess(img):
     return img, pad
 
 def prepare_raw_imgs(imgs_list, mode, img_size):
-    '''
+    """
     Resize, pad to square & make it torch.tensor() for model input
 
     Inputs
         imgs_list: list of imgs (each img is a BGR np array read from openCV)
-    '''
+    """
     imgs_list = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in imgs_list]
         
     if mode == 'torch':
@@ -83,17 +83,17 @@ def prepare_raw_imgs(imgs_list, mode, img_size):
     return torch.stack(imgs), imgs_shapes
 
 def clahe(img, clipLimit=3.5):
-    '''
+    """
     Increases the contrast of an image by CLAHE (Contrast Limited Adaptive Histogram Equalization)
     https://en.wikipedia.org/wiki/Adaptive_histogram_equalization#Contrast_Limited_AHE
-    
+
     Operates on LAB color channels
     Note that BGR2LAB and (BGR2RGB + RGB2LAB) give different values even in the L-channel
     Only tested performance for BGR2LAB
-    
+
     clipLimit:
         Threshold for contrast limiting (3.5 works fine for LRC plates trt seg)
-    '''
+    """
     # Converting image to LAB Color model
     lab= cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
