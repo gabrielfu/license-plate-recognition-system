@@ -5,7 +5,7 @@ import json
 import time
 import logging
 from datetime import datetime
-
+import base64
 
 def encode_json(m):
     return json.dumps(m).encode('ascii')
@@ -41,6 +41,7 @@ class KafkaSender:
 
         self._is_started = True
         self.thread = threading.Thread(target=self._sending, args=())
+        self.thread.daemon = True
         self.thread.start()
         logging.info('Sender started!')
 
@@ -54,15 +55,21 @@ class KafkaSender:
                 logging.exception('Sender try to get message when messages queue is empty (unexpected)')
                 continue
 
-            date_time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-            for cam_ip, (license_num, conf) in msg.items():
-                if conf is None: # Recognition fail
+            date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            for cam_ip, item in msg.items():
+                license_number = item["plate_num"]
+                confidence = item["confidence"]
+                image = item["image"]
+                if confidence is None: # Recognition fail
                     logging.info(f'{cam_ip}: recognition failed')
                     continue
-                output = {}
-                output['Camera ID'] = cam_ip
-                output['License number'] = license_num
-                output['Time'] = date_time
+                output = {
+                    'camera': cam_ip,
+                    'license_number': license_number,
+                    'confidence': confidence,
+                    'image': base64.b64encode(image).decode('ascii'),
+                    'time': date_time,
+                }
                 try:
                     self.producer.send(self.topic, output)
                     logging.info('Sender sent result {}'.format(output))
