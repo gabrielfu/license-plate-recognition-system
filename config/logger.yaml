@@ -17,14 +17,14 @@ handlers:
   console:
     class: logging.StreamHandler
     level: DEBUG
-    formatter: standard
+    formatter: detailed
     stream: ext://sys.stdout
 
   # Output to single file
   std_file_handler:
     class: logging.FileHandler
     level: INFO
-    formatter: standard
+    formatter: detailed
     filename: logs/_today.log
     encoding: utf8
     
@@ -32,7 +32,7 @@ handlers:
   rotating_file_handler:
     class: lprs.logger.CustomTimedRotatingHandler
     level: INFO
-    formatter: standard
+    formatter: detailed
     filename: logs/_today.log
     encoding: utf8
     when: midnight
