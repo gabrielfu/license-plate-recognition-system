@@ -14,8 +14,8 @@ from lprs.logger import setup_logging
 
 
 # Read configs
-logger_cfg = read_yaml('./config/logger.yaml')
-kafka_cfg = read_yaml('./config/kafka.yaml')
+logger_cfg = read_yaml('./configs/logger.yaml')
+kafka_cfg = read_yaml('./configs/kafka.yaml')
 
 # Setup logging handlers & initialize logger
 os.makedirs(logger_cfg['log_dir'], exist_ok=True)

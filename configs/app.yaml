@@ -1,0 +1,9 @@
+app:
+  sleep_after_init: 3.0
+  print_time_every_loops: 250
+
+use_trt:
+  car_locator: False
+  plate_detector: False
+  segmentator: False
+  char_recognizer: False

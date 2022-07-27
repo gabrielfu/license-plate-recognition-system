@@ -160,11 +160,11 @@ def _run():
     ###       App Initialization      ###
     #####################################
     # Read configs
-    app_cfg = read_yaml('./config/app.yaml')
-    cameras_cfg = read_yaml('./config/cameras.yaml')
-    models_cfg = read_yaml('./config/models.yaml')
-    logger_cfg = read_yaml('./config/logger.yaml')
-    kafka_cfg = read_yaml('./config/kafka.yaml')
+    app_cfg = read_yaml('./configs/app.yaml')
+    cameras_cfg = read_yaml('./configs/cameras.yaml')
+    models_cfg = read_yaml('./configs/models.yaml')
+    logger_cfg = read_yaml('./configs/logger.yaml')
+    kafka_cfg = read_yaml('./configs/kafka.yaml')
 
     # Setup logging handlers & initialize logger
     os.makedirs(logger_cfg['log_dir'], exist_ok=True)
