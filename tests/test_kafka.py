@@ -8,7 +8,7 @@ import threading
 import numpy as np
 from kafka import KafkaConsumer
 
-from lprs.sender.sender import KafkaSender
+from lprs.sender import KafkaSender
 from lprs.utils.utils import read_yaml
 from lprs.logger import setup_logging
 

@@ -7,7 +7,7 @@ from collections import defaultdict, OrderedDict
 from typing import Dict
 
 from lprs.camera.manager import CameraManager
-from lprs.sender.sender import KafkaSender
+from lprs.sender import KafkaSender
 from lprs.utils.utils import read_yaml
 from lprs.utils.bbox import compute_area
 from lprs.utils.majority_vote import majority_vote
