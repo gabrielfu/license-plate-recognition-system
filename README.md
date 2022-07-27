@@ -6,6 +6,7 @@
 - [X] 97% accuracy on Hong Kong vehicles license plate, highest in the market
 - [X] 55 fps running on NVIDIA T4 GPU, 4vCPU with TensorRT
 - [X] Handles low light environment, glares, blurs, wet lens
+- [X] Support inference on both IP cameras and .mp4 video files
 - [X] Pushes recognition result to a local Kafka topic
 - [X] CUDA support
 - [ ] TensorRT support (work in progress)
@@ -18,7 +19,23 @@ and provide real time license plate recognition service on any vehicles entering
 
 We decided to open source this project in 2022. I took this opportunity to tidy up the code and deployment.
 
-## Setup
+## Usage
+
+### Model Weights
+First, go to `....` to download the model weights and put them inside `./data`.
+
+The weights are trained on a proprietary Hong Kong license plate dataset.
+This repository does not contain training code of the models.
+If you would like to run on other countries' license plates, 
+please retrain the models on your dataset. 
+
+### Run on Docker
+To run, simply run 
+```shell
+docker-compose up -d
+```
+
+## Configurations
 
 
 # Speed (T4, 4vCPU):
