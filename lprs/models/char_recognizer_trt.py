@@ -1,11 +1,12 @@
 import torch
-import cv2
 import yaml
 import numpy as np
+
 from ..utils.utils import get_correct_path
 from .modules.charnet_trt import TrtCharNet
 
-class CharRecognizerTRT
+
+class CharRecognizerTRT:
     def __init__(self, cfg):
         self.model_path = get_correct_path(cfg['model_path'])
         self.input_size = cfg['input_size']
@@ -14,13 +15,13 @@ class CharRecognizerTRT
         self.model = TrtCharNet(self.model_path, self.input_size, self.max_batch_size)
 
     def predict(self, img_lst):
-        '''
+        """
         Inputs
             img_lst: list of np.arrays(h,w,c)
         Outputs
             tuple('AB1234', 0.99)
             confidence is the minimal prediction confidence among characters
-        '''
+        """
         output_str = ''
 
         out = self.model.detect(img_lst)[0][:len(img_lst), :]  ## trt_outputs[0] is the prediction

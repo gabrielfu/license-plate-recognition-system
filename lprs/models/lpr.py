@@ -1,5 +1,36 @@
 import logging
 import numpy as np
+from typing import Tuple, List, Dict
+
+
+def find_frame_by_plate_idx(target_plate_idx: int, batch_plates_len: Tuple[int]) -> Tuple[int, int]:
+    """
+    Inputs
+        target_plate_idx: idx of plate in the flattened list of all plates
+        batch_plates_len: number of plates in each frames
+    Outputs:
+        i: idx of frame
+        p: idx of plate in that frame
+
+    E.g.
+        batch_plates_len == (2,0,4)
+            Meaning that there are 2 plates in first image, no plate in second image and 4 plates in third image
+        target_plate_idx == 5
+            Meaning that we want the 6th plate (indexing from 0)
+        Output == (2, 3)
+            Meaning that it is the 4th plate in the 3rd image (indexing from 0)
+    """
+    i = 0
+    p = 0
+    if target_plate_idx >= sum(batch_plates_len):
+        logging.error(
+            f'IndexOutOfRange: Finding {target_plate_idx + 1}th plate but there are only {sum(batch_plates_len)} plates')
+    while p + batch_plates_len[i] <= target_plate_idx:
+        # next frame
+        p += batch_plates_len[i]
+        i += 1
+    return i, target_plate_idx - p
+
 
 class LPR:
     def __init__(self, cfg, use_trt=None):
@@ -38,10 +69,10 @@ class LPR:
         self.pad_x = cfg['lpr']['pad_x']
         self.pad_y = cfg['lpr']['pad_y']
 
-    def predict(self, frames):
-        '''
+    def predict(self, frames: List[np.ndarray]) -> List[List[Dict]]:
+        """
         Inputs
-            frames: list of frames (np.array or tensors)
+            frames: list of frames (np.array)
         Outputs
             output: [
                         # each frame (empty list if no plate in the frame)
@@ -60,34 +91,7 @@ class LPR:
                             }
                         ]
                     ]
-        '''
-                   
-        def find_frame_by_plate_idx(target_plate_idx, batch_plates_len):
-            '''
-            Inputs
-                target_plate_idx: idx of plate in the flattened list of all plates
-                batch_plates_len: number of plates in each frames
-            Outputs:
-                i: idx of frame
-                p: idx of plate in that frame
-
-            E.g.
-                batch_plates_len == [2,0,4]
-                    Meaning that there are 2 plates in first image, no plate in second image and 4 plates in third image
-                target_plate_idx == 5
-                    Meaning that we want the 6th plate (indexing from 0)
-                Output == (2, 3)
-                    Meaning that it is the 4th plate in the 3rd image (indexing from 0)
-            '''
-            i = 0
-            p = 0        
-            if target_plate_idx >= sum(batch_plates_len):
-                logging.error(f'IndexOutOfRange: Finding {target_plate_idx+1}th plate but there are only {sum(batch_plates_len)} plates')
-            while p + batch_plates_len[i] <= target_plate_idx:
-                # next frame
-                p += batch_plates_len[i]
-                i += 1
-            return i, target_plate_idx-p
+        """
 
         # Batch detect plates
         batch_preds = self.detector.predict(frames)
@@ -101,7 +105,7 @@ class LPR:
                 h, w = frame.shape[:2]
                 # For each plate in the frame
                 for pred in preds:
-                    x1,y1,x2,y2,_,clsconf,_ = pred
+                    x1, y1, x2, y2, _, clsconf, _ = pred
                     # Pad extra space to detected plate img
                     pad_w = int((x2-x1)*self.pad_x)
                     pad_h = int((y2-y1)*self.pad_y)
@@ -109,9 +113,9 @@ class LPR:
                     y2 = int(min(y2+pad_h,h))
                     x1 = int(max(x1-pad_w,0))
                     x2 = int(min(x2+pad_w,w))
-                    plates.append((x1,y1,x2,y2, clsconf))
+                    plates.append((x1, y1, x2, y2, clsconf))
             batch_plates.append(plates)
-            batch_plates_imgs.extend(frame[y1:y2, x1:x2] for x1,y1,x2,y2,_ in plates)
+            batch_plates_imgs.extend(frame[y1:y2, x1:x2] for x1, y1, x2, y2, _ in plates)
 
         # record number of plates in each frame
         # so that we can map the predicted plate number to its corresponding frame

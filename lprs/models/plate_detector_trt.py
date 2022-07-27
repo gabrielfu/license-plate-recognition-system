@@ -1,10 +1,11 @@
 import numpy as np
-import time
+
 from .modules.yolo_trt import TrtYOLO
 from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import rescale_boxes
 
-class PlateDetectorTRT
+
+class PlateDetectorTRT:
     def __init__(self, cfg):
         self.input_size = cfg['input_size'] # (h,w)
         self.model_path = cfg['model_path']
@@ -16,13 +17,13 @@ class PlateDetectorTRT
         self.classes = load_classes(get_correct_path(cfg['class_path']))
 
     def predict(self, imgs_list, sort_by='conf'):
-        '''
+        """
         Inputs
             imgs_list: list of np.array(h,w,c)
                 Can be empty
                 Cannot have any None elements
             sort_by: Sort output results by this criteria. Values: 'conf' or 'area'
-            
+
         Outputs
             list of np.arrays
             # for each frame
@@ -32,13 +33,14 @@ class PlateDetectorTRT
                 np.array(n, 7),
                 None
             ]
-        '''
-#        start = time.time()
+        """
+
         if not imgs_list: # Empty imgs list
             return []
 
         imgs_detections = self.model.detect(imgs_list)
 
+        i = 0
         for i, (detections, img) in enumerate(zip(imgs_detections, imgs_list)):
             img_shape = img.shape[:2]
 
@@ -53,5 +55,5 @@ class PlateDetectorTRT
                     imgs_detections[i] = rescale_boxes(np.array(detections), self.input_size[0], img_shape)
 
         imgs_detections = imgs_detections[:i+1]
-#        print(f'plate_detector_trt predict time: {time.time() - start}')
+
         return imgs_detections

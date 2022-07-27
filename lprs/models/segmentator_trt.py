@@ -1,11 +1,20 @@
 import numpy as np
-import time
+
 from .modules.yolo_trt import TrtYOLO
 from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import rescale_boxes
 from ..utils.image_preprocess import clahe
 
-class SegmentatorTRT
+
+def avg_rois_height(boxes) -> float:
+    avg_h = 0
+    for box in boxes:
+        avg_h += box[3] - box[1]
+    avg_h /= len(boxes)
+    return avg_h
+
+
+class SegmentatorTRT:
     def __init__(self, cfg):
         self.input_size = cfg['input_size'] # (h,w)
         self.model_path = cfg['model_path']
@@ -19,20 +28,20 @@ class SegmentatorTRT
         self.contrast = float(cfg['contrast'])
         
     def predict(self, plates_list):
-        '''
+        """
         Inputs
             plates_list: list of np.array(h,w,c)
                 Can be empty
                 Cannot have any None elements
         Outputs
-            list of list of np.array 
+            list of list of np.array
             # for each plate
             [
                 np.array(num_char, 5), # x1,y1,x2,y2,score
                 # None if no character is segmented
                 None
             ]
-        '''
+        """
         if self.contrast > 0:
             boxes_list, boxes_centres_list = self.get_rois([clahe(img, self.contrast) for img in plates_list])
         else:
@@ -44,22 +53,22 @@ class SegmentatorTRT
         return boxes_list
     
     def get_rois(self, img_lst, sort_by='conf'):
-        '''
+        """
         Inputs
             img_lst: list of np.array(h,w,c)
                 Can be empty
                 Cannot have any None elements
         Outputs
-            boxes_list: 
+            boxes_list:
             # for each plate
             [
                 # x1,y1,x2,y2,score (=conf*cls_conf)
-                np.array(num_char, 5) 
+                np.array(num_char, 5)
                 # None if no character is segmented
                 None
             ]
-            
-            boxes_centres_list: 
+
+            boxes_centres_list:
             # for each plate
             [
                 # Box centre of each char
@@ -70,7 +79,7 @@ class SegmentatorTRT
                 # None if no char
                 None
             ]
-        '''
+        """
         if not img_lst: # Empty imgs list
             return [], []
 
@@ -135,13 +144,6 @@ class SegmentatorTRT
         if len(boxes) == 0:
             return boxes
 
-        def avg_rois_height(boxes):
-            avg_h = 0
-            for box in boxes:
-                avg_h += box[3]-box[1]
-            avg_h /= len(boxes)
-            return avg_h
-
         char_line_threshold = self.char_line_threshold*avg_rois_height(boxes)
 
         all_x = [row[0] for row in boxes_centres]
@@ -153,15 +155,13 @@ class SegmentatorTRT
         for i in range(len(all_in_one)-1):
             diff_y.append(abs(all_in_one[i][2]-all_in_one[i+1][2]))
 
-        if diff_y == []:
+        if not diff_y:
             return None
         #if only one line, sort by x axis and done
         if max(diff_y) < char_line_threshold:
             all_in_one = sorted(all_in_one, key=lambda k: k[1])
-            #print('oneline')
             return [row[0] for row in all_in_one]
 
-        #print('twolines')
         #two lines case
         #if max_y - y coordinate of the char is larger than threshold, then its grouped into first line
         first_line = [one for one in all_in_one if one[2] - min(all_y) < char_line_threshold]

@@ -5,7 +5,6 @@ import logging
 import tensorrt as trt
 import pycuda.driver as cuda
 
-import time
 
 try:
     # Sometimes python2 does not understand FileNotFoundError
@@ -15,6 +14,7 @@ except NameError:
 
 def GiB(val):
     return val * 1 << 30
+
 
 # Simple helper data class that's a little nicer to use than a 2-tuple.
 class HostDeviceMem:
@@ -27,6 +27,7 @@ class HostDeviceMem:
 
     def __repr__(self):
         return self.__str__()
+
 
 # Allocates all buffers required for an engine, i.e. host/device inputs/outputs.
 def allocate_buffers(engine):
@@ -49,10 +50,10 @@ def allocate_buffers(engine):
             outputs.append(HostDeviceMem(host_mem, device_mem))
     return inputs, outputs, bindings, stream
 
+
 # This function is generalized for multiple inputs/outputs.
 # inputs and outputs are expected to be lists of HostDeviceMem objects.
 def do_inference(context, bindings, inputs, outputs, stream):
-#    start = time.time()
     # Transfer input data to the GPU.
     [cuda.memcpy_htod_async(inp.device, inp.host, stream) for inp in inputs]
     # Run inference.
@@ -62,7 +63,6 @@ def do_inference(context, bindings, inputs, outputs, stream):
     # Synchronize the stream
     stream.synchronize()
     # Return only the host outputs.
-#    print(f'do_inference time: {time.time()-start}')
     return [out.host for out in outputs]
 
 
@@ -94,20 +94,18 @@ class TrtCharNet:
         return img_in
 
     def _preprocess_img_lst(self, img_lst):
-#        start = time.time()
         imgs_array = np.array([self._preprocess_img(img) for img in img_lst])  # (b,c,h,w)
         imgs_array = np.ascontiguousarray(imgs_array)
-#        print(f'yolo_trt _preprocess_img_lst [len{len(img_lst)}] time {time.time() - start}')
         return imgs_array
 
     def detect(self, img_lst):
-        '''
+        """
         Allocate buffers each prediction on the fly to avoid context issues
         inputs:
             - img_lst: list of BGR np arrays
         outputs:
             - imgs_preds: list of list of preds (x1,y1,x2,y2,conf,cls_conf,cls)  [p.s. normalized coords]
-        '''
+        """
         imgs_array = self._preprocess_img_lst(img_lst)
 
         self.inputs[0].host = imgs_array
