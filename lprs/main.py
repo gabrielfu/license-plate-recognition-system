@@ -118,7 +118,7 @@ def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manag
             logging.exception(f'{ip}: Error when triggering cameras')
             continue
 
-def main():
+def run():
 
     #####################################
     ###       App Initialization      ###
@@ -279,14 +279,13 @@ def main():
             loop_time_ttl = collections.defaultdict(float)
 
 
-if __name__ == '__main__':
+def main():
     try:
-        main()
+        run()
     except Exception as e:
         logging.exception(e)
         exit_app()
 
 
-
-
-
+if __name__ == '__main__':
+    main()
