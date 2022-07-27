@@ -60,11 +60,11 @@ def init_car_locator(models_cfg, use_trt):
     """ Import & initialize Car Locator """
     logging.info(f'Initializing Car Locator... (TensorRT={use_trt["car_locator"]})')
     if use_trt["car_locator"]:
-        from models.trt import CarLocatorTRT
+        from lprs.models.trt import CarLocatorTRT
         car_locator = CarLocatorTRT(models_cfg['car_locator_trt'])
         car_batch_size = int(models_cfg['car_locator_trt']['max_batch_size'])
     else:
-        from models import CarLocator
+        from lprs.models import CarLocator
         car_locator = CarLocator(models_cfg['car_locator'])
         car_batch_size = int(models_cfg['car_locator']['batch_size'])
     return car_locator, car_batch_size
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        logging.error(e)
+        logging.exception(e)
         exit_app()
 
 
