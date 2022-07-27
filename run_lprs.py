@@ -1,3 +1,3 @@
-from lprs.main import main
+import lprs
 
-main()
+lprs.run()
