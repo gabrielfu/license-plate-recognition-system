@@ -61,7 +61,7 @@ def init_car_locator(models_cfg, use_trt):
     """ Import & initialize Car Locator """
     logging.info(f'Initializing Car Locator... (TensorRT={use_trt["car_locator"]})')
     if use_trt["car_locator"]:
-        from models import CarLocatorTRT
+        from models.trt import CarLocatorTRT
         car_locator = CarLocatorTRT(models_cfg['car_locator_trt'])
         car_batch_size = int(models_cfg['car_locator_trt']['max_batch_size'])
     else:

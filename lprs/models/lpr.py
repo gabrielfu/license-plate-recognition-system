@@ -43,26 +43,26 @@ class LPR:
             if model == 'plate_detector':
                 logging.info(f'Initializing Plate Detector... (TensorRT={trt})') 
                 if trt:
-                    from .plate_detector_trt import PlateDetectorTRT
+                    from .trt import PlateDetectorTRT
                     self.detector = PlateDetectorTRT(cfg['plate_detector_trt'])
                 else:
-                    from .plate_detector import PlateDetector
+                    from . import PlateDetector
                     self.detector = PlateDetector(cfg['plate_detector'])
             elif model == 'segmentator':
                 logging.info(f'Initializing Segmentator... (TensorRT={trt})') 
                 if trt:
-                    from .segmentator_trt import SegmentatorTRT
+                    from .trt import SegmentatorTRT
                     self.segmentator = SegmentatorTRT(cfg['segmentator_trt'])
                 else:
-                    from .segmentator import Segmentator
+                    from . import Segmentator
                     self.segmentator = Segmentator(cfg['segmentator'])
             elif model == 'char_recognizer':
                 logging.info(f'Initializing Char Recognizer... (TensorRT={trt})') 
                 if trt:
-                    from .char_recognizer_trt import CharRecognizerTRT
+                    from .trt import CharRecognizerTRT
                     self.recognizer = CharRecognizerTRT(cfg['char_recognizer_trt'])
                 else:
-                    from .char_recognizer import CharRecognizer
+                    from . import CharRecognizer
                     self.recognizer = CharRecognizer(cfg['char_recognizer'])
     
         # How much to pad in detected plates before segmenting (0~1)
