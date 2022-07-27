@@ -3,12 +3,13 @@ import sys
 sys.path.insert(0, os.getcwd())
 import time
 import logging
-import collections
+from collections import defaultdict, OrderedDict
 
 from lprs.camera.manager import CameraManager
 from lprs.sender.sender import KafkaSender
 from lprs.utils.utils import read_yaml
 from lprs.utils.bbox import compute_area
+from lprs.utils.majority_vote import majority_vote
 from lprs.logger import setup_logging
 from lprs.models import LPR
 
@@ -18,43 +19,6 @@ def exit_app():
     logging.info('Shutting down application')
     sys.exit()
 
-def majority_vote(ocr_results):
-    """
-    Input:
-    - ocr_results: list of tuples e.g. [('PV1954',0.99),('PV1954',0.97),('PV1934',0.91),...]
-
-    Output:
-    - tuple(num, conf) e.g. ('PV1954', 0.99)
-    """
-    if not ocr_results:  # Empty
-        return 'Recognition fail', None
-
-    counter = {}
-    license_num_prob = {}
-    for license_num, min_conf in ocr_results:
-        # Count number of votes
-        counter[license_num] = counter.get(license_num, 0) + 1
-
-#             if license_num not in license_num_max_prob:
-#                 license_num_max_prob[license_num] = avg_conf
-#             elif avg_conf > license_num_max_prob[license_num]:
-#                 license_num_max_prob[license_num] = avg_conf
-        if license_num not in license_num_prob:
-            license_num_prob[license_num] = [min_conf]
-        else:
-            license_num_prob[license_num].append(min_conf)
-
-    license_num_prob = {num:(sum(scores)/len(scores)) for num, scores in license_num_prob.items()}
-    # Unqiue majority --> output major result, Multi/No majority --> output highest avg_conf result
-    major_candidates = [lic for lic, count in counter.items() if count == max(counter.values())]
-    major_candidates_conf = {lic:license_num_prob[lic] for lic in major_candidates}
-    lic_num, conf = max(major_candidates_conf.items(), key=lambda x: x[1])
-    return lic_num, conf
-
-def init_LPR(models_cfg, use_trt):
-    """ Import & initialize LPR """
-    lpr = LPR(models_cfg, use_trt)
-    return lpr
 
 def init_car_locator(models_cfg, use_trt):
     """ Import & initialize Car Locator """
@@ -137,12 +101,15 @@ def _run():
     logging.info('Starting Application...')
     
     # Print loop time every x loops
-    print_every = int(app_cfg['app']['print_time_every_loops'])
+    print_every = int(app_cfg['app'].get('print_time_every_loops', 0))
     
     # Check if use trt or not
-    # use_trt is sorted by values so that False's are in the front
-    # use_trt = OrderedDict(sorted(app_cfg['use_trt'].items(), key=lambda x: x[1], reverse=False))
-    use_trt = app_cfg['use_trt']
+    # Needs to initialize all torch models before initializing trt models
+    # Otherwise, due to cuda context issues, the models will predict None all the time
+    # So, sort use_trt by values so that False's are in the front
+    use_trt = OrderedDict(sorted(app_cfg['use_trt'].items(), key=lambda x: x[1], reverse=False))
+
+    # Validate majority vote setting for TRT model
     if use_trt['plate_detector']:
         if models_cfg['plate_detector_trt']['max_batch_size'] < cameras_cfg['properties']['num_votes']:
             raise Exception(f"Number of majority votes ({cameras_cfg['properties']['num_votes']}) "
@@ -150,14 +117,12 @@ def _run():
                             f"PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})")
             
 
-    # Needs to initialize all torch models before initializing trt models
-    # Otherwise, cuda context issues, or models will predict None all the time
     if use_trt['car_locator']: # need to initialize LPR first
-        lpr = init_LPR(models_cfg, use_trt)
+        lpr = LPR(models_cfg, use_trt)
         car_locator, car_batch_size = init_car_locator(models_cfg, use_trt)
     else: # need to initialize Car Locator first
         car_locator, car_batch_size = init_car_locator(models_cfg, use_trt)
-        lpr = init_LPR(models_cfg, use_trt)
+        lpr = LPR(models_cfg, use_trt)
 
     # Create wrapper function to handle config car locator batch size, so that it's not checked in every loop
     if car_batch_size > 1:
@@ -181,8 +146,8 @@ def _run():
     #####################################
     ###          Start Loop           ###
     #####################################   
-    loop_count = collections.defaultdict(float)
-    loop_time_ttl = collections.defaultdict(float)
+    loop_count = defaultdict(float)
+    loop_time_ttl = defaultdict(float)
     while True:
         loop_start = time.time()
         # Get all the frames for prediction
@@ -268,15 +233,15 @@ def _run():
             continue
         loop_time_ttl[num_lpr_predict] += loop_time
         loop_count[num_lpr_predict] += 1
-        if loop_count[0] >= print_every:
+        if loop_count[0] >= print_every > 0:
             logging.info('***************Speed evaluation******************')
             for num_lpr_predict in loop_count.keys():
                 avg_time = loop_time_ttl[num_lpr_predict] / (loop_count[num_lpr_predict]+1e-16)
                 logging.info(f'[num_lpr_prediction in loop: {num_lpr_predict}] {loop_count[num_lpr_predict]}-loop average time: {avg_time:.2f} s')
             all_fps = camera_manager.get_all_fps()
             logging.info(f'Camera fps: {all_fps}')
-            loop_count = collections.defaultdict(float)
-            loop_time_ttl = collections.defaultdict(float)
+            loop_count = defaultdict(float)
+            loop_time_ttl = defaultdict(float)
 
 
 def run():
