@@ -4,15 +4,14 @@ sys.path.insert(0, os.getcwd())
 import time
 import logging
 import collections
-from camera.manager import CameraManager
-from sender.sender import KafkaSender
-from utils.utils import read_yaml
-from utils.bbox import compute_area
-from logger import setup_logging
 
-from .models import LPR
+from lprs.camera.manager import CameraManager
+from lprs.sender.sender import KafkaSender
+from lprs.utils.utils import read_yaml
+from lprs.utils.bbox import compute_area
+from lprs.logger import setup_logging
+from lprs.models import LPR
 
-import pycuda.autoinit
 
 def exit_app():
     """ Shut down the whole application"""
@@ -125,11 +124,11 @@ def main():
     ###       App Initialization      ###
     #####################################
     # Read configs
-    app_cfg = read_yaml('../config/app.yaml')
-    cameras_cfg = read_yaml('../config/cameras.yaml')
-    models_cfg = read_yaml('../config/models.yaml')
-    logger_cfg = read_yaml('../config/logger.yaml')
-    kafka_cfg = read_yaml('../config/kafka.yaml')
+    app_cfg = read_yaml('./config/app.yaml')
+    cameras_cfg = read_yaml('./config/cameras.yaml')
+    models_cfg = read_yaml('./config/models.yaml')
+    logger_cfg = read_yaml('./config/logger.yaml')
+    kafka_cfg = read_yaml('./config/kafka.yaml')
 
     # Setup logging handlers & initialize logger
     os.makedirs(logger_cfg['log_dir'], exist_ok=True)
