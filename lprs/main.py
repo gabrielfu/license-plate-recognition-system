@@ -60,18 +60,14 @@ def init_LPR(models_cfg, use_trt):
 def init_car_locator(models_cfg, use_trt):
     """ Import & initialize Car Locator """
     logging.info(f'Initializing Car Locator... (TensorRT={use_trt["car_locator"]})')
-    try:
-        if use_trt["car_locator"]:
-            from car_locator_api import CarLocatorTRT
-            car_locator = CarLocatorTRT(models_cfg['car_locator_trt'])
-            car_batch_size = int(models_cfg['car_locator_trt']['max_batch_size'])
-        else:
-            from car_locator_api import CarLocator
-            car_locator = CarLocator(models_cfg['car_locator'])
-            car_batch_size = int(models_cfg['car_locator']['batch_size'])
-    except Exception:
-        logging.exception('Failed to initialize Car Locator!')
-        exit_app()
+    if use_trt["car_locator"]:
+        from models import CarLocatorTRT
+        car_locator = CarLocatorTRT(models_cfg['car_locator_trt'])
+        car_batch_size = int(models_cfg['car_locator_trt']['max_batch_size'])
+    else:
+        from models import CarLocator
+        car_locator = CarLocator(models_cfg['car_locator'])
+        car_batch_size = int(models_cfg['car_locator']['batch_size'])
     return car_locator, car_batch_size
 
 def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
@@ -150,13 +146,13 @@ def main():
     use_trt = app_cfg['use_trt']
     if use_trt['plate_detector']:
         if models_cfg['plate_detector_trt']['max_batch_size'] < cameras_cfg['properties']['num_votes']:
-            logging.critical(f"Number of majority votes ({cameras_cfg['properties']['num_votes']}) is smaller than maximum batch size of PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})")
-            exit_app()
+            raise Exception(f"Number of majority votes ({cameras_cfg['properties']['num_votes']}) "
+                            f"is smaller than maximum batch size of "
+                            f"PlateDetectorTRT ({models_cfg['plate_detector_trt']['max_batch_size']})")
             
-    '''
-    Needs to initialize all torch models before initializing trt models
-    Otherwise, cuda context issues, or models will predict None all the time
-    '''
+
+    # Needs to initialize all torch models before initializing trt models
+    # Otherwise, cuda context issues, or models will predict None all the time
     if use_trt['car_locator']: # need to initialize LPR first
         lpr = init_LPR(models_cfg, use_trt)
         car_locator, car_batch_size = init_car_locator(models_cfg, use_trt)
