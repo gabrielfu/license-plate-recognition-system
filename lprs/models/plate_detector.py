@@ -1,8 +1,7 @@
 import torch
-import cv2
 
 from .modules.darknet import Darknet
-from ..utils.image_preprocess import to_tensor, prepare_raw_imgs
+from ..utils.image_preprocess import prepare_raw_imgs
 from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import non_max_suppression, rescale_boxes_with_pad
 
@@ -27,9 +26,10 @@ class PlateDetector:
             # Load checkpoint weights
             self.model.load_state_dict(torch.load(weights_path, map_location=self.device))
         self.model.eval()  # Set in evaluation mode
+        torch.set_grad_enabled(False)
     
     def predict(self, img_lst):
-        '''
+        """
         Inputs
             img_lst: list of np.array(h,w,c)
                 Can be empty
@@ -43,7 +43,7 @@ class PlateDetector:
                 np.array(n, 7),
                 None
             ]
-        '''
+        """
         if not img_lst: # Empty imgs list
             return []
 
@@ -52,9 +52,8 @@ class PlateDetector:
         input_imgs = input_imgs.to(self.device)
 
         # Yolo prediction
-        with torch.no_grad():
-            img_detections = self.model(input_imgs)
-            img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
+        img_detections = self.model(input_imgs)
+        img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
 
         for i, (detection, img_shape) in enumerate(zip(img_detections, imgs_shapes)):
             if detection is not None:

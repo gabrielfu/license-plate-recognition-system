@@ -29,20 +29,21 @@ class CarLocator:
             # Load checkpoint weights
             self.model.load_state_dict(torch.load(weights_path, map_location=self.device))
         self.model.eval()  # Set in evaluation mode
+        torch.set_grad_enabled(False)
 
         # Define car detection classes
         self.target_classes = ['car', 'bus', 'truck']
         self.idx2targetcls = {idx:cls_name for idx, cls_name in enumerate(self.classes) if cls_name in self.target_classes}
     
     def predict(self, img_lst, sort_by='conf'):
-        '''
+        """
         Inputs
             img_lst: list of np.array(h,w,c)
                 Can be empty
                 Cannot have any None elements
 
         output:
-            [   
+            [
                 # For each frame (empty list if no car in the frame)
                 [
                     # For each detected car
@@ -52,7 +53,7 @@ class CarLocator:
                     }
                 ]
             ]
-        '''
+        """
         if not img_lst: # Empty imgs list
             return []
 
@@ -61,9 +62,8 @@ class CarLocator:
         input_imgs = input_imgs.to(self.device)
 
         # Yolo prediction
-        with torch.no_grad():
-            imgs_detections = self.model(input_imgs)
-            imgs_detections = non_max_suppression(imgs_detections, self.conf_thres, self.nms_thres)
+        imgs_detections = self.model(input_imgs)
+        imgs_detections = non_max_suppression(imgs_detections, self.conf_thres, self.nms_thres)
 
         # if no car in the frame, output empty list
         output = [[] for _ in range(len(imgs_detections))]

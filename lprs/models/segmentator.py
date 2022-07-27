@@ -6,6 +6,15 @@ from ..utils.image_preprocess import prepare_raw_imgs
 from ..utils.utils import load_classes, get_correct_path
 from ..utils.bbox import non_max_suppression, rescale_boxes_with_pad
 
+
+def avg_rois_height(boxes) -> float:
+    avg_h = 0
+    for box in boxes:
+        avg_h += box[3] - box[1]
+    avg_h /= len(boxes)
+    return avg_h
+
+
 class Segmentator:
     def __init__(self, cfg):
         # Yolov3 stuff
@@ -29,6 +38,7 @@ class Segmentator:
             # Load checkpoint weights
             self.model.load_state_dict(torch.load(weights_path, map_location=self.device))
         self.model.eval()  # Set in evaluation mode
+        torch.set_grad_enabled(False)
 
         # define line threshold
         self.char_line_threshold = cfg['char_line_threshold']
@@ -92,9 +102,8 @@ class Segmentator:
         input_imgs = input_imgs.to(self.device)
 
         # Yolo prediction
-        with torch.no_grad():
-            img_detections = self.model(input_imgs)
-            img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
+        img_detections = self.model(input_imgs)
+        img_detections = non_max_suppression(img_detections, self.conf_thres, self.nms_thres)
 
         # Rescale boxes to original image
         for i, (detection, img_shape) in enumerate(zip(img_detections, imgs_shapes)):
@@ -144,13 +153,6 @@ class Segmentator:
     def sort_boxes_single(self, boxes, boxes_centres):
         if not boxes:
             return []
-
-        def avg_rois_height(boxes):
-            avg_h = 0
-            for box in boxes:
-                avg_h += box[3]-box[1]
-            avg_h /= len(boxes)
-            return avg_h
 
         char_line_threshold = self.char_line_threshold*avg_rois_height(boxes)
 
