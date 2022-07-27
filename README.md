@@ -6,8 +6,8 @@
 - [X] 97% accuracy on Hong Kong vehicles license plate, highest in the market
 - [X] 55 fps running on NVIDIA T4 GPU, 4vCPU with TensorRT
 - [X] Handles low light environment, glares, blurs, wet lens
-- [X] Support inference on both IP cameras and .mp4 video files
-- [X] Pushes recognition result to a local Kafka topic
+- [X] Supports inference on both IP cameras and .mp4 video files
+- [X] Easy integration via a local Kafka topic
 - [X] CUDA support
 - [ ] TensorRT support (work in progress)
 
