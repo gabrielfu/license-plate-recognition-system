@@ -4,6 +4,7 @@ sys.path.insert(0, os.getcwd())
 import time
 import logging
 from collections import defaultdict, OrderedDict
+from typing import Dict
 
 from lprs.camera.manager import CameraManager
 from lprs.sender.sender import KafkaSender
@@ -33,6 +34,7 @@ def init_car_locator(models_cfg, use_trt):
         car_batch_size = int(models_cfg['car_locator']['batch_size'])
     return car_locator, car_batch_size
 
+
 def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
     """ Wrapper function to do fixed batch car location detection """
     # Extract new frame for each camera
@@ -47,9 +49,10 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
     for i in range(0, len(new_frames), car_batch_size):
         i_end = min(i+car_batch_size, len(new_frames))
         try:
-            car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')        
+            car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')
         except Exception:
             logging.exception(f'{cam_ips[i:i_end]}: Failed to predict car detection')
+            continue
         # Update the trigger status of each batch cameras based on car locations
         try:
             all_car_locations = {
@@ -58,6 +61,8 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
             camera_manager.update_camera_trigger_status(all_car_locations)
         except Exception:
             logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
+            continue
+
 
 def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manager):
     """ Wrapper function to do single img car location detection """
@@ -81,6 +86,73 @@ def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manag
         except Exception:
             logging.exception(f'{ip}: Error when triggering cameras')
             continue
+
+
+def license_plate_recognition(lpr: LPR, all_frames: Dict):
+    """
+    Args:
+        lpr (LPR): LPR instance
+        all_frames (Dict): list of frames from camera manager
+
+    Returns:
+        license_numbers == {
+            '123.0.0.1': {
+                plate_num: AB1234,
+                confidence: 0.99,
+                image: <np.array>
+            },
+            '123.0.0.2': {
+                plate_num: CD5678,
+                confidence: 0.88,
+                image: <np.array>
+            },
+        }
+    """
+    # Predict license numbers
+    # For each camera (as a batch)
+    license_numbers = {}
+    num_lpr_predict = 0
+
+    for ip, frames in all_frames.items():
+        try:
+            # Continue if no accum_frames
+            accum_frames = frames['accum_frames']
+            if accum_frames is None:
+                continue
+            num_lpr_predict += 1
+            # handle any None frame in accum_frames
+            accum_frames = [f for f in accum_frames if f is not None]
+            if len(accum_frames) == 0:
+                continue
+            # Do prediction
+            lpr_output = lpr.predict(accum_frames)
+            # For each frame, find the plate with largest area
+            plate_nums = []
+            for frame in lpr_output:
+                max_area = 0
+                best_plate = None
+                for plate in frame:
+                    area = compute_area(plate['plate']['coords'])
+                    if area > max_area:
+                        max_area = area
+                        best_plate = plate
+                # Found a plate
+                if best_plate is not None:
+                    result = best_plate['plate_num']
+                    plate_nums.append((result['numbers'], result['confidence']))
+            # Perform majority vote
+            plate_num, conf = majority_vote(plate_nums)
+            # Put into dict
+            license_numbers[ip] = {
+                'plate_num': plate_num,
+                'confidence': conf,
+                'image': accum_frames[0]
+            }
+        except Exception:
+            logging.exception(f'{ip}: Error in lpr prediction')
+
+    return license_numbers, num_lpr_predict
+
 
 def _run():
 
@@ -123,12 +195,6 @@ def _run():
     else: # need to initialize Car Locator first
         car_locator, car_batch_size = init_car_locator(models_cfg, use_trt)
         lpr = LPR(models_cfg, use_trt)
-
-    # Create wrapper function to handle config car locator batch size, so that it's not checked in every loop
-    if car_batch_size > 1:
-        car_locator_wrapper = fixed_batch_car_locator
-    else:
-        car_locator_wrapper = single_img_car_locator
         
     # Initialize cameras and start frame streaming
     logging.info('Starting cameras...')
@@ -148,86 +214,34 @@ def _run():
     #####################################   
     loop_count = defaultdict(float)
     loop_time_ttl = defaultdict(float)
+
     while True:
         loop_start = time.time()
         # Get all the frames for prediction
         all_frames = camera_manager.get_all_frames()
 
-        #####################################
-        ###         Car detection         ###
-        #####################################  
-        car_locator_wrapper(all_frames, car_locator, car_batch_size, camera_manager)  
 
-        #####################################
-        ###      License Recognition      ###
-        #####################################
-        # Predict license numbers
-        # For each camera (as a batch)
-        license_numbers = {}
-        num_lpr_predict = 0
-        for ip, frames in all_frames.items():
-            try:
-                # Continue if no accum_frames
-                accum_frames = frames['accum_frames']
-                if accum_frames is None:
-                    continue
-                num_lpr_predict += 1
-                # handle any None frame in accum_frames
-                accum_frames = [f for f in accum_frames if f is not None]
-                if len(accum_frames) == 0:
-                    continue
-                # Do prediction
-                lpr_output = lpr.predict(accum_frames) 
-                # For each frame, find the plate with largest area
-                plate_nums = []
-                for frame in lpr_output:
-                    max_area = 0
-                    best_plate = None
-                    for plate in frame:
-                        area = compute_area(plate['plate']['coords'])
-                        if area > max_area:
-                            max_area = area
-                            best_plate = plate
-                    # Found a plate
-                    if best_plate is not None:
-                        result = best_plate['plate_num']
-                        plate_nums.append((result['numbers'], result['confidence']))
-                # Perform majority vote
-                plate_num, conf = majority_vote(plate_nums)
-                # Put into dict                
-                license_numbers[ip] = {
-                    'plate_num': plate_num,
-                    'confidence': conf,
-                    'image': accum_frames[0]
-                }
-            except Exception:
-                logging.exception(f'{ip}: Error in lpr prediction')
-            
-        '''
-        license_numbers == {
-            '123.0.0.1': {
-                plate_num: AB1234,
-                confidence: 0.99,
-                image: <np.array>
-            },
-            '123.0.0.2': {
-                plate_num: CD5678,
-                confidence: 0.88,
-                image: <np.array>
-            },
-        }
-        '''
-    
-        #####################################
-        ###       Output with Kafka       ###
-        #####################################
+        # Car Detection
+        if car_batch_size > 1:
+            fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_manager)
+        else:
+            single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manager)
+
+
+        # License Plate Recognition
+        license_numbers, num_lpr_predict = license_plate_recognition(lpr, all_frames)
+
+
+        # Output with Kafka
         if license_numbers:
             logging.info(f'LPR RESULT: {license_numbers}')
             try:
                 sender.send(license_numbers)
             except Exception:
                 logging.critical("Sender failed to send LPR results!")
-        
+
+
+        # Timer
         loop_time = time.time() - loop_start
         if loop_time < 0.01: # doesn't count since it's likely empty loop
             continue
