@@ -85,6 +85,7 @@ class SegmentatorTRT:
 
         imgs_detections = self.model.detect(img_lst)
 
+        i = 0
         for i, (detections, img) in enumerate(zip(imgs_detections, img_lst)):
             img_shape = img.shape[:2]
 
