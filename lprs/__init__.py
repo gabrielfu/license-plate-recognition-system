@@ -212,7 +212,7 @@ def _run():
     #####################################
     ###          Start Loop           ###
     #####################################   
-    loop_count = defaultdict(float)
+    loop_count = defaultdict(int)
     loop_time_ttl = defaultdict(float)
 
     while True:
@@ -255,7 +255,7 @@ def _run():
             all_fps = camera_manager.get_all_fps()
             logging.info(f'Camera fps: {all_fps}')
             loop_count = defaultdict(float)
-            loop_time_ttl = defaultdict(float)
+            loop_time_ttl = defaultdict(int)
 
 
 def run():
