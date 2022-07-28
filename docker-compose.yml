@@ -53,3 +53,4 @@ services:
       - ./configs:/app/configs
       - ./data:/app/data
       - ./logs:/app/logs
+      - ./assets:/app/assets
