@@ -1,33 +1,40 @@
 import threading
 import cv2
-import queue
 from enum import Enum
 import time
 import numpy as np
 import logging
+from typing import Union
+
 
 class CameraType(Enum):
     entrance = 0
     top = 1
     bot = 2
 
+
 class Camera:
     def __init__(self,
-                 cam_ip,
-                 cam_type,
-                 num_votes=5,
-                 accum_time=.5,
-                 cam_fps_sim=False
+                 cam_name: str,
+                 cam_ip: Union[str, int],
+                 cam_type: CameraType,
+                 num_votes: int=5,
+                 accum_time: float=.5,
+                 cam_fps_sim: float=0
                  ):
         """
         Args:
-            cam_ip (str/int 0): camera src for cv2.VideoCapture
+            cam_name (str): camera name
+            cam_ip (str/int): camera src for cv2.VideoCapture, either IP, filename or 0 (web cam)
             cam_type (CameraType): camera type
             num_votes (int): max length of frames_lst
+            accum_time (float): max frame accumulation time
+            cam_fps_sim (float): fps value for simulation
         """
         if cam_type not in CameraType:
-            logging.error(f"{cam_ip}: Invalid camera type {cam_type}")
+            logging.error(f"{cam_name} ({cam_ip}): Invalid camera type {cam_type}")
 
+        self.cam_name = cam_name
         self.cam_ip = cam_ip
         self.cam_type = cam_type
         self.accum_time = accum_time
@@ -47,7 +54,7 @@ class Camera:
         self._is_accumulating = False
         
     def __str__(self):
-        return f'Camera({self.cam_type}, {self.cam_ip})'
+        return f'Camera({self.cam_name}, {self.cam_type}, {self.cam_ip})'
 
     @property
     def is_started(self):
@@ -121,21 +128,21 @@ class Camera:
         """
         To start reading frames """
         if self._is_started:
-            logging.warning(f'{self.cam_ip}: attempted to start camera when it has already started')
+            logging.warning(f'{self.cam_name}: attempted to start camera when it has already started')
             return None
 
         self._is_started = True
         self.thread = threading.Thread(target=self._updating, args=())
         self.thread.start()
-        logging.info(f'Camera started: {self.cam_ip}')
+        logging.info(f'Camera started: {self.cam_name}')
 
     def start_accumulate(self):
         """
         To start putting frames into self.accum_frames. Please call this function only after calling start()"""
         if self._is_accumulating:
-            logging.warning(f'{self.cam_ip}: started accumulating while previous accumulating process un-finished')
+            logging.warning(f'{self.cam_name}: started accumulating while previous accumulating process un-finished')
         if len(self.accum_frames) != 0:
-            logging.warning(f'{self.cam_ip}: started accumulating while previous accumulated frames un-used')
+            logging.warning(f'{self.cam_name}: started accumulating while previous accumulated frames un-used')
             self._clear_accum_frames()
         self._is_accumulating = True
         self.start_accum_time = time.monotonic()
@@ -152,7 +159,7 @@ class Camera:
         if not self._is_accumulating and accum_frames_length > 0:
             num_votes = min(accum_frames_length, self.num_votes)
             if accum_frames_length < self.num_votes:
-                logging.warning(f'{self.cam_ip}: less than {self.num_votes} accum_frames  (only {accum_frames_length})')
+                logging.warning(f'{self.cam_name}: less than {self.num_votes} accum_frames  (only {accum_frames_length})')
             idxes = [int((accum_frames_length-1)/(num_votes-1+1e-16) * i) for i in range(num_votes)]
             accum_frames = [self.accum_frames[i] for i in idxes]
             accum_frames = np.array(accum_frames)
@@ -171,13 +178,13 @@ class Camera:
                 
     def reconnecting(self):
         """Try to reconnect untill succ"""
-        logging.warning(f'{self.cam_ip}: camera cannot read frame, trying to reconnect...')
+        logging.warning(f'{self.cam_name}: camera cannot read frame, trying to reconnect...')
         while self._is_started:
             self.cap = cv2.VideoCapture(self.cam_ip)
             time.sleep(5)
             succ, _ = self.cap.read()
             if succ:
-                logging.warning(f'{self.cam_ip}: camera reconnected')
+                logging.warning(f'{self.cam_name}: camera reconnected')
                 # reset fps
                 with self.lock:
                     self.num_frames = 0

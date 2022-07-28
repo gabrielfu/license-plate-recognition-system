@@ -40,10 +40,13 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
     # Extract new frame for each camera
     new_frames = []
     cam_ips = []
+    cam_names = []
     for ip, frames in all_frames.items():
         frame = frames['new_frame']
         if frame is not None:
             new_frames.append(frame)
+            cam_name = camera_manager.get_camera(ip).cam_name
+            cam_names.append(cam_name)
             cam_ips.append(ip)
     # Fixed batch predict car detection
     for i in range(0, len(new_frames), car_batch_size):
@@ -51,7 +54,7 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
         try:
             car_locations = car_locator.predict(new_frames[i:i_end], sort_by='conf')
         except Exception:
-            logging.exception(f'{cam_ips[i:i_end]}: Failed to predict car detection')
+            logging.exception(f'{cam_names[i:i_end]}: Failed to predict car detection')
             continue
         # Update the trigger status of each batch cameras based on car locations
         try:
@@ -60,7 +63,7 @@ def fixed_batch_car_locator(all_frames, car_locator, car_batch_size, camera_mana
             }
             camera_manager.update_camera_trigger_status(all_car_locations)
         except Exception:
-            logging.exception(f'{cam_ips[i:i_end]}: Error when triggering cameras')
+            logging.exception(f'{cam_names[i:i_end]}: Error when triggering cameras')
             continue
 
 
@@ -77,18 +80,20 @@ def single_img_car_locator(all_frames, car_locator, car_batch_size, camera_manag
             car = car_locator.predict([frame], sort_by='conf')[0]
             car_locations = {ip: car}
         except Exception:
-            logging.exception(f'{ip}: Failed to predict car detection')
+            cam_name = camera_manager.get_camera(ip).cam_name
+            logging.exception(f'{cam_name}: Failed to predict car detection')
             continue
 
         # Update the trigger status of all cameras based on car locations
         try:
             camera_manager.update_camera_trigger_status(car_locations)
         except Exception:
-            logging.exception(f'{ip}: Error when triggering cameras')
+            cam_name = camera_manager.get_camera(ip).cam_name
+            logging.exception(f'{cam_name}: Error when triggering cameras')
             continue
 
 
-def license_plate_recognition(lpr: LPR, all_frames: Dict):
+def license_plate_recognition(lpr: LPR, all_frames: Dict, camera_manager):
     """
     Args:
         lpr (LPR): LPR instance
@@ -144,6 +149,7 @@ def license_plate_recognition(lpr: LPR, all_frames: Dict):
             plate_num, conf = majority_vote(plate_nums)
             # Put into dict
             license_numbers[ip] = {
+                'cam_name': camera_manager.get_camera(ip).cam_name,
                 'plate_num': plate_num,
                 'confidence': conf,
                 'image': accum_frames[0]
@@ -229,13 +235,13 @@ def _run():
 
 
         # License Plate Recognition
-        license_numbers, num_lpr_predict = license_plate_recognition(lpr, all_frames)
+        license_numbers, num_lpr_predict = license_plate_recognition(lpr, all_frames, camera_manager)
 
 
         # Output with Kafka
         prediction_time = time.time() - loop_start
         if license_numbers:
-            _print = {ip: res["plate_num"] for ip, res in license_numbers.items()}
+            _print = {res["cam_name"]: res["plate_num"] for res in license_numbers.values()}
             logging.info(f'LPR RESULT: {_print} (time={prediction_time:.4f}s)')
             try:
                 sender.send(license_numbers)

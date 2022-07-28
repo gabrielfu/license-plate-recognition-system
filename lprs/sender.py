@@ -57,11 +57,12 @@ class KafkaSender:
 
             date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             for cam_ip, item in msg.items():
+                cam_name = item["cam_name"]
                 license_number = item["plate_num"]
                 confidence = item["confidence"]
                 image = item["image"]
                 if confidence is None: # Recognition fail
-                    logging.info(f'{cam_ip}: recognition failed')
+                    logging.info(f'{cam_name}: recognition failed')
                     continue
                 output = {
                     'camera': cam_ip,
