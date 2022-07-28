@@ -26,7 +26,7 @@ class Camera:
             num_votes (int): max length of frames_lst
         """
         if cam_type not in CameraType:
-            logging.error("{}: Invalid camera type {}".format(cam_ip, cam_type))
+            logging.error(f"{cam_ip}: Invalid camera type {cam_type}")
 
         self.cam_ip = cam_ip
         self.cam_type = cam_type
@@ -127,7 +127,7 @@ class Camera:
         self._is_started = True
         self.thread = threading.Thread(target=self._updating, args=())
         self.thread.start()
-        logging.info('Camera started: {}'.format(self.cam_ip))
+        logging.info(f'Camera started: {self.cam_ip}')
 
     def start_accumulate(self):
         """

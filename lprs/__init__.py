@@ -233,8 +233,10 @@ def _run():
 
 
         # Output with Kafka
+        prediction_time = time.time() - loop_start
         if license_numbers:
-            logging.info(f'LPR RESULT: {license_numbers}')
+            _print = {ip: res["plate_num"] for ip, res in license_numbers.items()}
+            logging.info(f'LPR RESULT: {_print} (time={prediction_time:.4f}s)')
             try:
                 sender.send(license_numbers)
             except Exception:
@@ -251,7 +253,7 @@ def _run():
             logging.info('***************Speed evaluation******************')
             for num_lpr_predict in loop_count.keys():
                 avg_time = loop_time_ttl[num_lpr_predict] / (loop_count[num_lpr_predict]+1e-16)
-                logging.info(f'[num_lpr_prediction in loop: {num_lpr_predict}] {loop_count[num_lpr_predict]}-loop average time: {avg_time:.2f} s')
+                logging.info(f'[num_lpr_prediction in loop: {num_lpr_predict}] {loop_count[num_lpr_predict]}-loop average time: {avg_time:.4f} s')
             all_fps = camera_manager.get_all_fps()
             logging.info(f'Camera fps: {all_fps}')
             loop_count = defaultdict(float)

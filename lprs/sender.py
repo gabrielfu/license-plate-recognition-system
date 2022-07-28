@@ -29,7 +29,7 @@ class KafkaSender:
                 return self.producer
             except Exception:
                 if first_time:
-                    logging.error('Failed to initialize Kafka producer, re-initializing...: bootstrap_servers {}'.format(self.bootstrap_servers))
+                    logging.error(f'Failed to initialize Kafka producer, re-initializing...: bootstrap_servers {self.bootstrap_servers}')
                     first_time = False
                 time.sleep(5)
                 continue
@@ -67,14 +67,14 @@ class KafkaSender:
                     'camera': cam_ip,
                     'license_number': license_number,
                     'confidence': confidence,
-                    'image': base64.b64encode(image).decode('ascii'),
+                    # 'image': base64.b64encode(image).decode('ascii'), # image too large, don't send
                     'time': date_time,
                 }
                 try:
                     self.producer.send(self.topic, output)
-                    logging.info('Sender sent result {}'.format(output))
+                    logging.info(f'Sender sent result {output}')
                 except Exception:
-                    logging.exception('Failed to send message {}'.format(output))
+                    logging.exception(f'Failed to send message {output}')
 
     def send(self, license_numbers):
         try:
