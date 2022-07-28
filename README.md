@@ -19,6 +19,7 @@
 #### Integration
 - [X] Local Kafka topic
 - [X] IP cameras and .mp4 video files
+- [X] Multiple cameras
 
 #### Accelerations
 - [X] CUDA support
@@ -56,6 +57,35 @@ docker-compose up -d
 
 ## Configurations
 
+### Camera Source
+The current setting is configured to run on multiple video files inside `./assets/videos`.
+
+To run on other video files or IP cameras, you would need to modify `./configs/cameras.yaml`, which looks like this:
+```yaml
+cameras:
+  my_camera:
+    type: 'entrance'
+    ip: '127.0.0.1'
+    fps_simulation: 30
+    accum_time: 0.5
+    trigger_zone:
+      - !!python/tuple [531, 983]
+      - !!python/tuple [1050, 700]
+      - !!python/tuple [565, 565]
+      - !!python/tuple [360, 750]
+```
+
+- name: you can change the name from `my_camera` to any valid string
+- `type`: only `entrance` is support at the moment
+- `ip`: the path to video file or the camera IP
+- `fps_simulation`: use your video or camera fps value
+- `accum_time`: maximum frame accumulation time for majority vote
+- `trigger_zone`: This defines a polygon on the frame, inside which LPR will be performed. 
+The format is a list of vertices in (x, y). The vertices need to be in order in either clockwise 
+or anti-clockwise direction. The polygon is usually, but not necessary, a tetragon. 
+See image below for an example.
+
+![](assets/images/trigger_zone.jpg)
 
 # Speed (T4, 4vCPU):
 Car detection (trt)

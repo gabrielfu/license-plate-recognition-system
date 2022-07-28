@@ -7,7 +7,7 @@ properties:
 cameras:
   camera1:
     type: 'entrance'
-    ip: './assets/entrance_1.mp4'
+    ip: './assets/videos/entrance_1.mp4'
     fps_simulation: 30
     accum_time: 0.5
     trigger_zone:
@@ -17,7 +17,7 @@ cameras:
       - !!python/tuple [360, 750]
   camera2:
     type: 'entrance'
-    ip: './assets/entrance_2.mp4'
+    ip: './assets/videos/entrance_2.mp4'
     accum_time: 0.5
     fps_simulation: 30
     trigger_zone:
@@ -27,7 +27,7 @@ cameras:
       - !!python/tuple [360, 750]
   camera3:
     type: 'entrance'
-    ip: './assets/entrance_3.mp4'
+    ip: './assets/videos/entrance_3.mp4'
     fps_simulation: 30
     accum_time: 0.5
     trigger_zone:

@@ -8,7 +8,7 @@ data/*.engine
 logs/
 
 # assets
-assets/
+assets/videos/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
