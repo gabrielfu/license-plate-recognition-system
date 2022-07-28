@@ -31,3 +31,6 @@ services:
     depends_on:
       - zookeeper
       - broker
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs

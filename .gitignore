@@ -1,8 +1,8 @@
 # model weights
-models/data/*.weights
-models/data/*.pth
-models/data/*.trt
-models/data/*.engine
+data/*.weights
+data/*.pth
+data/*.trt
+data/*.engine
 
 # logs
 logs/
