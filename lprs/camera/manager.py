@@ -1,8 +1,9 @@
 import time
 import logging
 from shapely.geometry import Polygon
+from typing import List, Tuple, Dict, Optional
 from .camera import Camera, CameraType
-from ..utils.bbox import compute_iou, bbox_polygon_intersection
+from ..utils.bbox import bbox_polygon_intersection, compute_area, compute_iou
 
 class CameraManager:
     def __init__(self, config):
@@ -47,7 +48,7 @@ class CameraManager:
             #     cam_type = CameraType.bot
             else:
                 logging.error(f'{cam_name}: Unimplemented cam_type ({cam_type})')
-            trigger_zone = v['trigger_zone']
+            trigger_zone = v.get('trigger_zone', None)
             cameras[cam_name] = {'camera': Camera(cam_name=cam_name,
                                                   cam_ip=cam_ip,
                                                   cam_type=cam_type,
@@ -129,7 +130,7 @@ class CameraManager:
                 logging.warning('UNEXPECTED: Not implemented non-entrance trigger logic!')
 
     @staticmethod
-    def find_triggered_car_coords(trigger_zone, car_locations):
+    def find_triggered_car_coords(trigger_zone: Polygon, car_locations: List[Dict]) -> Optional[Tuple[int, int, int, int]]:
         """
         To find if there's any car's bbox touches trigger_zone. If multiple car do, return the max intersection one.
         args:
@@ -138,11 +139,15 @@ class CameraManager:
         returns:
             triggered_coords (tuple(int x1, y1, x2, y2) / None): the coordinates of the car that has max iou with trigger zone 
         """
-        max_intersection = 0
+        max_intersection = 0.0
         triggered_coords = None
         for _, car in enumerate(car_locations):
             car_coords = car['coords']
-            car_zone_intersect = bbox_polygon_intersection(trigger_zone, car_coords)
+            # if zone is unspecified
+            if trigger_zone.is_empty:
+                car_zone_intersect = compute_area(car_coords)
+            else:
+                car_zone_intersect = bbox_polygon_intersection(trigger_zone, car_coords)
             if car_zone_intersect > max_intersection:
                 max_intersection = car_zone_intersect
                 triggered_coords = car_coords

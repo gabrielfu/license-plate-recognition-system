@@ -80,10 +80,10 @@ cameras:
 - `ip`: the path to video file or the camera IP
 - `fps_simulation`: use your video or camera fps value
 - `accum_time`: maximum frame accumulation time for majority vote
-- `trigger_zone`: This defines a polygon on the frame, inside which LPR will be performed. 
+- `trigger_zone` (*Optional*): This defines a polygon on the frame, inside which LPR will be performed. 
 The format is a list of vertices in (x, y). The vertices need to be in order in either clockwise 
 or anti-clockwise direction. The polygon is usually, but not necessary, a tetragon. 
-See image below for an example.
+See image below for an example. If the whole frame is valid, don't specify this field.
 
 ![](assets/images/trigger_zone.jpg)
 
