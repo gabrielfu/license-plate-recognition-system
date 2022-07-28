@@ -1,15 +1,16 @@
-FROM python:3.9-slim
+FROM pytorch/pytorch:1.9.0-cuda11.1-cudnn8-runtime
 
 RUN mkdir -p /app
 WORKDIR /app
 
-RUN apt clean \
-    && apt -y update \
-    && apt install -y libgl1 libopencv-dev python3-opencv \
+# libraries required by opencv
+RUN apt-get update \
+    && apt-get install -y libgl1-mesa-glx libgtk2.0-0 libsm6 libxext6 \
+    && rm -rf /var/lib/apt/lists/* \
     && python -m pip install --upgrade pip
 
 COPY requirements.txt ./requirements.txt
-RUN pip install -r ./requirements.txt -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip install -r ./requirements.txt
 
 # Set up the program in the image
 COPY . .
