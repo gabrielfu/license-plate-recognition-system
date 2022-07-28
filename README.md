@@ -87,6 +87,23 @@ See image below for an example.
 
 ![](assets/images/trigger_zone.jpg)
 
+
+## How It Works
+
+The software runs in perpetual loop, detecting for a vehicle in the trigger zone.
+
+When a vehicle is detected, the next N frames are saved in a list. 
+This is because the frame can be blurry due to vehicle motion, lighting and glare. 
+To achieve high accuracy, we will perform OCR on multiple images and do majority vote on the results.
+
+Next, each frame will undergo a sequence of 3 steps: plate detection, character segmentation 
+and character recognition. As mentioned, we have a majority vote to decide the final
+license plate numbers.
+
+The result is then pushed to a local Kafka topic where it can be consumed by other process.
+
+![](assets/images/flowchart.jpg)
+
 # Speed (T4, 4vCPU):
 Car detection (trt)
 Plate detection (trt)
