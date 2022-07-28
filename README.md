@@ -1,6 +1,7 @@
 # Real Time License Plate Recognition System (LPRS)
 
-Fast license plate recognition system with easy integration to your application.
+Fast license plate recognition system on Hong Kong license plates 
+with easy integration to your application.
 
 ![](assets/images/demo.gif)
 * Note: Image for illustration purpose only. 
@@ -42,7 +43,8 @@ We decided to open source this project in 2022. I took this opportunity to tidy 
 ## Usage
 
 ### Model Weights
-First, go to `....` to download the model weights and put them inside `./data`.
+First, go to [Google Drive](https://drive.google.com/drive/folders/1fNoDYwfrAReR2KT5IaQCQQDLUcS4dcKS?usp=sharing) 
+to download the model weights and put them inside `./data`.
 
 The weights are trained on a proprietary Hong Kong license plate dataset.
 This repository does not contain training code of the models.
