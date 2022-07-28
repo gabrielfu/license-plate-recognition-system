@@ -6,7 +6,7 @@
 
 #### Performance
 - [X] 97% accuracy, highest in the market
-- [X] 55 fps running on NVIDIA T4 GPU, 4vCPU with TensorRT
+- [X] < 1s prediction time on NVIDIA T4 GPU, 4vCPU with TensorRT
 
 #### Capabilities
 - [X] Dark environment
@@ -43,7 +43,13 @@ If you would like to run on other countries' license plates,
 please retrain the models on your dataset. 
 
 ### Run on Docker
-To run, simply run 
+As instructed by the PyTorch docker image, please set the following environment variables:
+```shell
+export COMPOSE_DOCKER_CLI_BUILD=1 
+export DOCKER_BUILDKIT=1
+```
+
+Then, simply run 
 ```shell
 docker-compose up -d
 ```
