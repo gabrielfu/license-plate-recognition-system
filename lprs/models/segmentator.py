@@ -95,7 +95,7 @@ class Segmentator:
         """
 
         # Image preprocessing
-        if not img_lst: # Empty imgs list
+        if len(img_lst) == 0: # Empty imgs list
             return [], []
 
         input_imgs, imgs_shapes = prepare_raw_imgs(img_lst, self.pred_mode, self.img_size)
@@ -151,7 +151,7 @@ class Segmentator:
         return boxes_list, boxes_centres_list
 
     def sort_boxes_single(self, boxes, boxes_centres):
-        if not boxes:
+        if len(boxes) == 0:
             return []
 
         char_line_threshold = self.char_line_threshold*avg_rois_height(boxes)

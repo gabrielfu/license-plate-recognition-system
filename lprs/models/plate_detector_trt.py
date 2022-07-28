@@ -35,7 +35,7 @@ class PlateDetectorTRT:
             ]
         """
 
-        if not imgs_list: # Empty imgs list
+        if len(imgs_list) == 0: # Empty imgs list
             return []
 
         imgs_detections = self.model.detect(imgs_list)

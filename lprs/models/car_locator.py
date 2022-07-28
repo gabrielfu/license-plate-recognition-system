@@ -54,7 +54,7 @@ class CarLocator:
                 ]
             ]
         """
-        if not img_lst: # Empty imgs list
+        if len(img_lst) == 0: # Empty imgs list
             return []
 
         # Prepare input

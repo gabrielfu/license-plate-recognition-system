@@ -11,7 +11,7 @@ def majority_vote(ocr_results: List[Tuple[str, float]]) -> Tuple[str, Optional[f
     Returns:
         tuple(num, conf) e.g. ('PV1954', 0.99)
     """
-    if not ocr_results:  # Empty
+    if len(ocr_results) == 0:  # Empty
         return 'Recognition fail', None
 
     counter = {}
