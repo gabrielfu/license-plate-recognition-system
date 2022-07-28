@@ -1,5 +1,11 @@
 # Real Time License Plate Recognition System (LPRS)
 
+Fast license plate recognition system with easy integration to your application.
+
+![](assets/images/demo.gif)
+* Note: Image for illustration purpose only. 
+  This software does not draw bounding boxes or texts on your video.
+  Please see [Usage](#Usage) for the output format and how to receive it.
 
 
 ## Features
@@ -55,6 +61,15 @@ Then, simply run
 docker-compose up -d
 ```
 
+Then, run your Kafka consumer listening on `localhost:9092` to receive the messages.
+
+### Output Format
+Your Kafka consumer should receiver messages in this format:
+```
+{'camera': '123.0.0.1', 'license_number': 'AB1234', 'confidence': 0.99, 'time': '2022-07-27 16:21:42'}
+{'camera': '123.0.0.2', 'license_number': 'CD5678', 'confidence': 0.88, 'time': '2022-07-27 16:21:42'}
+```
+
 ## Configurations
 
 ### Camera Source
@@ -77,7 +92,10 @@ cameras:
 
 - name: you can change the name from `my_camera` to any valid string
 - `type`: only `entrance` is support at the moment
-- `ip`: the path to video file or the camera IP
+- `ip`: camera source, which can take one of the following values:
+  - `./path/to/video`: the path to video file
+  - `127.0.0.1`: ip camera
+  - `0`: web cam
 - `fps_simulation`: use your video or camera fps value
 - `accum_time`: maximum frame accumulation time for majority vote
 - `trigger_zone` (*Optional*): This defines a polygon on the frame, inside which LPR will be performed. 
