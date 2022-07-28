@@ -9,6 +9,14 @@ with easy integration to your application.
   Please see [Usage](#Usage) for the output format and how to receive it.
 
 
+## Background
+This was an on-premise project that I did with my partners for a car park in Hong Kong in 2020. 
+This software would run on a GPU machine, connect to the IP cameras at the entrance of a car park
+and provide real time license plate recognition service on any vehicles entering the car park.
+
+We decided to open source this project in 2022. I took this opportunity to tidy up the code and deployment.
+
+
 ## Features
 
 #### Performance
@@ -32,13 +40,6 @@ with easy integration to your application.
 - [X] CUDA support
 - [ ] TensorRT support (work in progress)
 
-
-## Background
-This was an on-premise project that I did with my partners for a car park in Hong Kong in 2020. 
-This software would run on a GPU machine, connect to the IP cameras at the entrance of a car park
-and provide real time license plate recognition service on any vehicles entering the car park.
-
-We decided to open source this project in 2022. I took this opportunity to tidy up the code and deployment.
 
 ## Usage
 
