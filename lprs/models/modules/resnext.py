@@ -12,7 +12,7 @@ class ResNeXt(nn.Module):
         super().__init__()
         self.out_dim = out_dim
         if size == 50:
-            self.resnext = torchvision.models.resnext50_32x4d(pretrained=True)
+            self.resnext = torchvision.models.resnext50_32x4d(pretrained=False)
         else:
             raise NotImplementedError(f'Wrong model: ResNeXt-{size} is not implemented')
         self.fc1 = nn.Linear(1000, 256)
