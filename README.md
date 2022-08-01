@@ -65,6 +65,18 @@ docker-compose up -d
 ```
 
 Then, run your Kafka consumer listening on `localhost:9092` to receive the messages.
+```python
+from kafka import KafkaConsumer
+import json
+
+consumer = KafkaConsumer('lprs',
+                         bootstrap_servers=['local:9092'],
+                         value_deserializer=lambda m: json.loads(m.decode('ascii')))
+                         
+for message in consumer:
+    # do stuff...
+    pass
+```
 
 ### Output Format
 Your Kafka consumer should receiver messages in this format:
