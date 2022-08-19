@@ -279,7 +279,6 @@ def run():
     All rights reserved.
     The software can not be copied and/or distributed without the express permission of LayerForth Ltd.
     """
-    # logging.error(banner)
     for line in banner.split("\n"):
         if line:
             logging.info(line)
