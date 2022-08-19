@@ -175,7 +175,22 @@ def _run():
     # Setup logging handlers & initialize logger
     os.makedirs(logger_cfg['log_dir'], exist_ok=True)
     setup_logging(logger_cfg)
-    logging.info('-------------------------------------------------------')
+
+    banner = r"""
+     _     ____________  _____ 
+    | |    | ___ \ ___ \/  ___|
+    | |    | |_/ / |_/ /\ `--. 
+    | |    |  __/|    /  `--. \
+    | |____| |   | |\ \ /\__/ /
+    \_____/\_|   \_| \_|\____/
+    
+    Copyright (c) 2020 LayerForth Ltd
+    All rights reserved.
+    The software can not be copied and/or distributed without the express permission of LayerForth Ltd.
+    """
+    for line in banner.split("\n"):
+        if line:
+            logging.info(line)
     logging.info('Starting Application...')
     
     # Print loop time every x loops
@@ -267,22 +282,6 @@ def _run():
 
 
 def run():
-    banner = r"""
-     _     ____________  _____ 
-    | |    | ___ \ ___ \/  ___|
-    | |    | |_/ / |_/ /\ `--. 
-    | |    |  __/|    /  `--. \
-    | |____| |   | |\ \ /\__/ /
-    \_____/\_|   \_| \_|\____/
-
-    Copyright (c) 2020 LayerForth Ltd
-    All rights reserved.
-    The software can not be copied and/or distributed without the express permission of LayerForth Ltd.
-    """
-    for line in banner.split("\n"):
-        if line:
-            logging.info(line)
-
     try:
         _run()
     except Exception as e:
