@@ -267,6 +267,23 @@ def _run():
 
 
 def run():
+    banner = r"""
+     _     ____________  _____ 
+    | |    | ___ \ ___ \/  ___|
+    | |    | |_/ / |_/ /\ `--. 
+    | |    |  __/|    /  `--. \
+    | |____| |   | |\ \ /\__/ /
+    \_____/\_|   \_| \_|\____/
+
+    Copyright (c) 2020 LayerForth Ltd
+    All rights reserved.
+    The software can not be copied and/or distributed without the express permission of LayerForth Ltd.
+    """
+    # logging.error(banner)
+    for line in banner.split("\n"):
+        if line:
+            logging.info(line)
+
     try:
         _run()
     except Exception as e:
