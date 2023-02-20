@@ -44,8 +44,15 @@ We decided to open source this project in 2022. I took this opportunity to tidy 
 ## Usage
 
 ### Model Weights
-First, go to [Google Drive](https://drive.google.com/drive/folders/1fNoDYwfrAReR2KT5IaQCQQDLUcS4dcKS?usp=sharing) 
-to download the model weights and put them inside `./data`.
+---
+***Note: Trained model weights are not available for distribution at the moment***
+
+Please refer to [configs/models.yaml](configs/models.yaml) and model definitions 
+for an overview of all the model weights required.
+
+---
+
+~~First, download the model weights and put them inside `./data`.~~
 
 The weights are trained on a proprietary Hong Kong license plate dataset.
 This repository does not contain training code of the models.
